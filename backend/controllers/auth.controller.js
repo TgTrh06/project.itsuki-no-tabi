@@ -17,11 +17,14 @@ export const signup = async (req, res) => {
         }
         
         const hashedPassword = await bcrypt.hash(password, 10);
-        const verificationToken = generateVerificationToken(); // Implement this function to generate a code
+        const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+        
         const user = new User({
             email,
             password: hashedPassword,
             name,
+            verificationToken,
+            verificationTokenExpiresAt: Date.now();
         })
     } catch (error) {
 
@@ -33,7 +36,7 @@ export const login = (req, res) => {
     res.send('Signup route');
 };
 
-export const logout = (req, res) => {
-    // Handle signup logic here
-    res.send('Signup route');
+export const logout = async (req, res) => {
+	res.clearCookie("token");
+	res.status(200).json({ success: true, message: "Logged out successfully" });
 };
