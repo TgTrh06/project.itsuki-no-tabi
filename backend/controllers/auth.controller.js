@@ -1,6 +1,6 @@
-import express from 'express';
 import { User } from '../models/user.model.js';
 import bcrypt from 'bcryptjs';
+import { generateTokenAndSetCookie } from '../utils/generateTokenAndSetCookie.js';
 
 export const signup = async (req, res) => {
     // Handle signup logic
@@ -24,10 +24,24 @@ export const signup = async (req, res) => {
             password: hashedPassword,
             name,
             verificationToken,
-            verificationTokenExpiresAt: Date.now();
+            verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000
+        })
+
+        await user.save();
+
+        // jwt 
+        generateTokenAndSetCookie(res, user._id)
+
+        res.status(201).json({
+            success: true,
+            message: 'User registered successfully. Please verify your email.',
+            user: {
+                ...user._doc,
+                password: undefined,
+            },
         })
     } catch (error) {
-
+        res.status(400).json({ success: false, message: error.message });
     }
 };
 
