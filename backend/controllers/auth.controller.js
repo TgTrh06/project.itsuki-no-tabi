@@ -1,5 +1,6 @@
-import { User } from '../models/user.model.js';
 import bcrypt from 'bcryptjs';
+import { User } from '../models/user.model.js';
+import { sendVerificationEmail } from '../mailtrap/email.js';
 import { generateTokenAndSetCookie } from '../utils/generateTokenAndSetCookie.js';
 
 export const signup = async (req, res) => {
@@ -34,6 +35,8 @@ export const signup = async (req, res) => {
         // jwt 
         generateTokenAndSetCookie(res, user._id)
 
+        await sendVerificationEmail(user.email, verificationToken);
+
         res.status(201).json({
             success: true,
             message: 'User registered successfully. Please verify your email.',
@@ -56,7 +59,7 @@ export const verifyEmail = async (req, res) => {
         });
 
         if (!user) {
-            return res.status(400).json({ success: false, message: "Invalid or expired verification code"});
+            return res.status(400).json({ success: false, message: "Invalid or expired verification code" });
         }
 
         user.isVerified = true;
@@ -73,7 +76,8 @@ export const verifyEmail = async (req, res) => {
             },
         })
     } catch (error) {
-
+        console.log("Error in verifyEmail: ", error);
+        res.status(500).json({ success: false, message: "Server error" });
     }
 };
 
