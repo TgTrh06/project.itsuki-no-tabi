@@ -1,6 +1,11 @@
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { User } from '../models/user.model.js';
-import { sendVerificationEmail } from '../mailtrap/email.js';
+import { 
+    sendVerificationEmail,
+    sendPasswordResetEmail,
+    sendResetSuccessEmail 
+} from '../mailtrap/email.js';
 import { generateTokenAndSetCookie } from '../utils/generateTokenAndSetCookie.js';
 
 export const signup = async (req, res) => {
@@ -90,7 +95,7 @@ export const login = async (req, res) => {
         if (!user) {
             return res.status(400).json({ success: false, message: "Invalid credentials" });
         }
-        const isPasswordValid = await bcryptjs.compare(password, user.password);
+        const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
             return res.status(400).json({ success: false, message: "Invalid credentials" });
         }
@@ -104,7 +109,7 @@ export const login = async (req, res) => {
             success: true,
             message: "Logged in successfully",
             user: {
-                ...User._doc,
+                ...user._doc,
                 password: undefined,
             },
         });
@@ -163,7 +168,7 @@ export const resetPassword = async (req, res) => {
         }
 
         // Update password
-        const hashedPassword = await bcryptjs.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         user.password = hashedPassword;
         user.resetPasswordToken = undefined;

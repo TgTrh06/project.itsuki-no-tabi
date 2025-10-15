@@ -54,6 +54,7 @@ export const sendPasswordResetEmail = async (email, resetURL) => {
             html: PASSWORD_RESET_REQUEST_TEMPLATE.replace("{resetURL}", resetURL),
             category: "Password Reset",
         });
+        console.log("Reset password email sent successfully ", response);
     } catch (error) {
         console.error("Error sending password reset email ", error);
 
@@ -72,7 +73,7 @@ export const sendResetSuccessEmail = async (email) => {
             html: PASSWORD_RESET_SUCCESS_TEMPLATE,
             category: "Password Reset",
         });
-        console.log("Password reset email sent successfully ", response);
+        console.log("Successful reset email sent successfully ", response);
     } catch (error) {
         console.error("Error sending password reset success email ", error);
 
