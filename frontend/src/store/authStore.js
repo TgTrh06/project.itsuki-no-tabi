@@ -1,0 +1,32 @@
+import { create } from 'zustand'; // Custom hooks manager (Global State)
+import axios from 'axios'; // HTTP request (GET, POST, ...)
+
+// URL for dev or deploy
+const API_URL = import.meta.env.MODE === "development" ? "http://localhost:5000/api/auth" : "/api/auth";
+
+axios.defaults.withCredentials = true;
+
+// Create custom hook Zustand
+export const useAuthStore = create((set) => ({
+    user: null,
+    isAuthenticated: false,
+    error: null,
+    isLoading: false, // Request Async is proccessed or not
+    isCheckingAuth: true,
+    message: null,
+
+    signup: async (email, password, name) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await axios.post(`${API_URL}/signup`, { email, password, name });
+            set({ 
+                user: response.data.user, 
+                isAuthenticated: true, 
+                isLoading: false 
+            });
+        } catch (error) {
+            set({ error: error.response.data.message || "Error signing up", isLoading: false });
+            throw error;
+        }
+    },
+}))
