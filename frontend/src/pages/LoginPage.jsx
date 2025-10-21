@@ -1,17 +1,17 @@
-// ...existing code...
 import { useState } from "react";
+import { Mail, Lock, Loader } from "lucide-react";
 import { Link } from "react-router-dom";
 import Input from "../components/Input";
 import { useAuthStore } from "../store/authStore";
 
 const LoginPage = () => {
-    const [email, setEmail] = useState("");
+    const [email, setEmail] = useState(""); 
     const [password, setPassword] = useState("");
 
     const { login, isLoading, error } = useAuthStore();
 
     const handleLogin = async (e) => {
-        e.preventDefault();
+        e.preventDefault(); // Prevent browser to reload while submiting form
         await login(email, password);
     };
 
@@ -24,6 +24,7 @@ const LoginPage = () => {
 
                 <form onSubmit={handleLogin}>
                     <Input
+                        icon={Mail}
                         type='email'
                         placeholder='Email Address'
                         value={email}
@@ -31,6 +32,7 @@ const LoginPage = () => {
                     />
 
                     <Input
+                        icon={Lock}
                         type='password'
                         placeholder='Password'
                         value={password}
@@ -65,4 +67,3 @@ const LoginPage = () => {
     );
 };
 export default LoginPage;
-// ...existing code...
