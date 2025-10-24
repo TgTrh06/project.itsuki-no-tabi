@@ -11,7 +11,6 @@ import { generateTokenAndSetCookie } from '../utils/generateTokenAndSetCookie.js
 export const signup = async (req, res) => {
     // Handle signup logic
     const {email, password, name} = req.body;
-
     try {
         if (!email || !password || !name) {
             throw new Error('Missing required fields');
@@ -36,10 +35,7 @@ export const signup = async (req, res) => {
         })
 
         await user.save();
-
-        // jwt 
-        generateTokenAndSetCookie(res, user._id)
-
+        
         await sendVerificationEmail(user.email, verificationToken);
 
         res.status(201).json({

@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import { connectDB } from './config/db.js';
 
 import authRouter from './routes/auth.route.js'; 
+import blogRouter from './routes/blog.route.js';
 
 dotenv.config();
 
@@ -20,10 +21,11 @@ app.use(cors({
 }))
 
 app.get('/', (req, res) => {
-    res.send('Hello World!');
+    res.send('Itsuki no Tabi API Running 🗾');
 });
 
 app.use('/api/auth', authRouter);
+app.use('/api/blog', blogRouter);
 
 app.listen(PORT, () => {
     connectDB();
