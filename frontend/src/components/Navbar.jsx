@@ -1,13 +1,19 @@
-import React from 'react'
+import { Link } from "react-router-dom"
 
-export const Navbar = () => {
+export default function Navbar() {
   return (
     <nav>
         <h1>Itsuki no Tabi</h1>
         <div className="space-x-4">
-            <a href="#" className="hover:text-blue-500">Blog</a>
-            <a href="#" className="hover:text-blue-500">Tour</a>
-            <a href="#" className="hover:text-blue-500">Login</a>
+            <p className="text-sm text-green-400">
+              <Link to="/blogs" className="hover:text-pink-400">Blog</Link>
+            </p>
+            <p className="text-sm text-green-400">
+              <Link to="*" className="hover:text-pink-400">Tour</Link>
+            </p>
+            <p className="text-sm text-green-400">
+              <Link to="/login" className="hover:text-pink-400">Login</Link>
+            </p>
         </div>
     </nav>
   )
