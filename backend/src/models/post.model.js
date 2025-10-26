@@ -12,24 +12,28 @@ const postSchema = new mongoose.Schema(
       type: String,
       required: [true, "Content is required"],
     },
-    author: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: [true, "Author is required"],
-    },
-    tags: {
-      type: [String],
-      default: [],
-    },
-    status: {
+    imageUrl: {
       type: String,
-      enum: ["draft", "published", "archived"],
-      default: "draft",
+      default: "",
     },
-    isPublished: {
-      type: Boolean,
-      default: false,
-    },
+    // author: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "User",
+    //   required: [true, "Author is required"],
+    // },
+    // tags: {
+    //   type: [String],
+    //   default: [],
+    // },
+    // status: {
+    //   type: String,
+    //   enum: ["draft", "published", "archived"],
+    //   default: "draft",
+    // },
+    // isPublished: {
+    //   type: Boolean,
+    //   default: false,
+    // },
     // likes: {
     //   type: Number,
     //   default: 0,
@@ -54,8 +58,5 @@ postSchema.pre("save", function (next) {
   this.updatedAt = Date.now();
   next();
 });
-
-// Indexes for common queries
-postSchema.index({ author: 1, status: 1, createdAt: -1 });
 
 export const Post = mongoose.model("Post", postSchema);
