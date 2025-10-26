@@ -1,18 +1,19 @@
 import { Post } from "../models/post.model.js";
 
-export const getAllPost = async (req, res) => {
+export const getAllPosts = async (req, res) => {
     try {
-        const posts = await Post.find({ status: 'published'})
+        const posts = await Post.find()
+            .sort({ createdAt: -1 });
 
         res.status(200).json({
             status: 'success',
             message: 'Get all posts successfully',
             data: {
-                ...posts._doc
+                posts
             }
         })
     } catch (error) {
-        res.status(404).json({ success: false, message: error.message });
+        res.status(500).json({ message: "Server error", error: error.message });
     }
 };
 
@@ -31,6 +32,6 @@ export const getPost = async (req, res) => {
             }
         });
     } catch (error) {
-        res.status(404).json({ success: false, message: error.message });
+        res.status(500).json({ message: "Server error", error: error.message });
     }
 }

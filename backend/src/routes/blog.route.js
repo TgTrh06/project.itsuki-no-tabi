@@ -1,15 +1,12 @@
 import express from 'express';
 import { 
-    getAllPost, 
+    getAllPosts, 
     getPost 
 } from '../controllers/blog.controller.js';
 
 const router = express.Router();
 
-router.route("/")
-    .get(getAllPost);
-    
-router.route("/:id")
-    .get(getPost);
+router.get("/", getAllPosts);
+router.get("/:id", getPost);
 
 export default router;
