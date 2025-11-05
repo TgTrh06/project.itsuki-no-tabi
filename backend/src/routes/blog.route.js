@@ -3,11 +3,7 @@ import { verifyToken } from '../middleware/verifyToken.js';
 import { 
     getAllPosts, 
     getPost,
-    createPost,
-    updatePost,
-    deletePost,
-    toggleLikePost
-} from '../controllers/blog.controller.js';
+} from '../controllers/post.controller.js';
 
 const router = express.Router();
 
@@ -16,10 +12,10 @@ router.get("/", getAllPosts);
 router.get("/:id", getPost);
 
 // Protected routes - require authentication
-router.use(verifyToken);
-router.post("/", createPost);
-router.put("/:id", updatePost);
-router.delete("/:id", deletePost);
-router.post("/:id/like", toggleLikePost);
+// router.use(verifyToken);
+// // router.post("/", createPost);
+// router.put("/:id", updatePost);
+// router.delete("/:id", deletePost);
+// router.post("/:id/like", toggleLikePost);
 
 export default router;
