@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: true
         },
-        name: {
+        username: {
             type: String,
             required: true,
             unique: true
@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema(
         verificationToken: String,
         verificationTokenExpiresAt: Date,
     },
-    {timestamps:true}
+    { timestamps:true }
 );
 
 export const User = mongoose.model('User', userSchema);
