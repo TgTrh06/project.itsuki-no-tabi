@@ -1,11 +1,7 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose from "mongoose";
 
 const postSchema = new mongoose.Schema(
   {
-    title: {
-      type: String,
-      required: true,
-    },
     author: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -13,6 +9,15 @@ const postSchema = new mongoose.Schema(
     },
     img: {
       type: String,
+    },
+    title: {
+      type: String,
+      required: true,
+    },
+    slug: {
+      type: String,
+      unique: true,
+      required: true,
     },
     content: {
       type: String,
@@ -46,14 +51,15 @@ const postSchema = new mongoose.Schema(
     updatedAt: {
       type: Date,
       default: Date.now,
-    }
+    },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
-postSchema.pre("save", function(next) {
+postSchema.pre("save", function (next) {
   this.updatedAt = Date.now();
-  next;
+  next();
 });
 
 export const Post = mongoose.model("Post", postSchema);
+// export default mongoose.model("Post", postSchema);
