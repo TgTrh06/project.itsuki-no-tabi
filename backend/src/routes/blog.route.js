@@ -4,12 +4,13 @@ import {
     getAllPosts, 
     getPost,
 } from '../controllers/post.controller.js';
+import increaseView from '../middleware/increaseView.js';
 
 const router = express.Router();
 
 // Public routes
 router.get("/", getAllPosts);
-router.get("/:id", getPost);
+router.get("/:slug", increaseView, getPost);
 
 // Protected routes - require authentication
 // router.use(verifyToken);
