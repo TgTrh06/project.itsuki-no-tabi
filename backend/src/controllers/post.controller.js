@@ -12,9 +12,10 @@ export const getAllPosts = async (req, res) => {
         console.log(req.query);
 
         const cat = req.query.cat;
-        const author = req.query.author;
+        const creator = req.query.creator;
         const searchQuery = req.query.search;
         const sortQuery = req.query.sort;
+        const published = req.query.published;
 
         if (cat) {
             query.category = cat;
@@ -24,8 +25,14 @@ export const getAllPosts = async (req, res) => {
             query.title = { $regex: searchQuery, $options: "i" };
         }
 
-        if (author) {
-            query.author = author;
+        if (creator) {
+            const author = await User.findOne({ username: creator }).select("_id");
+            
+            if (!author) {
+                return res.status(404).json({ success: false, message: "No post found!" });
+            }
+
+            query.author = author._id;
         }
 
         let sortObj = { createdAt: -1 };
@@ -53,13 +60,13 @@ export const getAllPosts = async (req, res) => {
         }
 
         // Show only published posts unless specifically requested
-        if (!req.query.showAll) {
+        if (published === "true") {
             query.isPublished = true;
         }
 
         const [posts, total] = await Promise.all([
             Post.find(query)
-                .populate("author", "name email")
+                .populate("author", "username")
                 .sort(sortObj)
                 .skip(skip)
                 .limit(limit),
@@ -75,7 +82,8 @@ export const getAllPosts = async (req, res) => {
                     page,
                     limit,
                     total,
-                    pages: Math.ceil(total / limit)
+                    pages: Math.ceil(total / limit),
+                    hasMore: page * limit < total
                 }
             }
         });
@@ -91,8 +99,9 @@ export const getAllPosts = async (req, res) => {
 
 export const getPost = async (req, res) => {
     try {
-        const post = await Post.findById(req.params.id)
-            .populate('author', 'username');
+        const post = await Post.findOne({ slug: req.params.slug })
+            .populate('author', 'username email');
+        console.log("Found post:", post);
 
         if (!post) {
             return res.status(404).json({
@@ -102,6 +111,7 @@ export const getPost = async (req, res) => {
         };
 
         // Increment views
+        if (!post.meta) post.meta = { views: 0 };
         post.meta.views += 1;
         await post.save();
 
