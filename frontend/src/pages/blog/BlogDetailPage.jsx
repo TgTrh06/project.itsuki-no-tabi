@@ -4,14 +4,19 @@ import useBlogStore from "../../store/blogStore";
 import { formatDate } from "../../utils/date";
 
 export default function BlogDetailPage() {
-    const { id } = useParams();
-    const { selectedBlog, fetchBlogById, loading } = useBlogStore();
+    const { slug } = useParams();
+    const { selectedBlog, fetchBlogBySlug, loading, error } = useBlogStore();
 
     useEffect(() => {
-        fetchBlogById(id);
-    }, [id]);
+        fetchBlogBySlug(slug);
+    }, [slug]);
+
+    useEffect(() => {
+        console.log('BlogDetailPage - Selected blog updated:', selectedBlog);
+    }, [selectedBlog]);
 
     if (loading) return <p className="text-center mt-10">Loading...</p>;
+    if (error) return <p className="text-center mt-10 text-red-500">Error: {error}</p>;
     if (!selectedBlog) return <p className="text-center mt-10">Blog not found.</p>;
 
     return (

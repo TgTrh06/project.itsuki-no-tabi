@@ -1,14 +1,14 @@
-import Post from '../models/Post.js';
+import { Blog } from '../models/blog.model.js';
 
 const increaseView = async (req, res, next) => {
     const slug = req.params.slug;
     
-    await Post.findOneAndUpdate(
+    await Blog.findOneAndUpdate(
         { slug },
         { $inc: { 'meta.views': 1 } }
     );
 
-    next();
+    next(); // Call the next middleware or route handler
 };
 
 export default increaseView;

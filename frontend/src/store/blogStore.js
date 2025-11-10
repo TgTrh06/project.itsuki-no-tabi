@@ -1,48 +1,69 @@
-import { create } from "zustand";
-import axios from "axios";
+import { create } from 'zustand';
+import axios from 'axios';
 
 // URL for dev or deploy
-const API_URL = import.meta.env.MODE === "development" ? "http://localhost:5000/api" : "/api";
+const API_URL = import.meta.env.MODE === "development" ? "http://localhost:5000/api/blogs" : "/api/blogs";
 axios.defaults.withCredentials = true;
 
 const useBlogStore = create((set, get) => ({
-  blogs: [],
+  blogList: [],
+  pagination: { page: 1, limit: 9, total: 0, pages: 1, hasMore: false },
   selectedBlog: null,
   loading: false,
   error: null,
 
-  // Lấy tất cả blog
-  fetchBlogs: async () => {
+  // Lấy tất cả blog với phân trang
+  fetchBlogs: async (page = 1, limit = 9) => {
     set({ loading: true });
     try {
-      const res = await axios.get(`${API_URL}/blogs`);
-      // backend returns { status, message, data: { posts } }
-      const posts = res.data?.data?.posts || [];
-      set({ blogs: posts, loading: false });
+      const res = await axios.get(`${API_URL}?page=${page}&limit=${limit}`);
+      // backend returns { status, message, data: { blogs, pagination } }
+      const blogs = res.data?.data?.blogs || [];
+      const pagination = res.data?.data?.pagination || { page, limit, total: 0, pages: 1, hasMore: false };
+      set({ blogList: blogs, pagination, loading: false });
     } catch (err) {
       set({ error: err.response?.data?.message || "Error fetching blogs", loading: false });
     }
-  },
-
+  },  
+  
   // Lấy blog theo id
   fetchBlogById: async (id) => {
-    set({ loading: true });
+    set({ loading: true, error: null, selectedBlog: null });
     try {
-      const res = await axios.get(`${API_URL}/blogs/${id}`);
-      // backend returns { success, data: { post } }
-      const post = res.data?.data?.post || null;
-      set({ selectedBlog: post, loading: false });
+      const res = await axios.get(`${API_URL}/${id}`);
+      // backend returns { success, data: { blog } }
+      const blog = res.data?.data?.blog || null;
+      set({ selectedBlog: blog, loading: false });
+      return blog;
     } catch (err) {
+      console.error('Error fetching blog:', err?.response || err);
       set({ error: err.response?.data?.message || "Error fetching blog", loading: false });
+      return null;
+    }
+  },
+
+  // Lấy blog theo slug
+  fetchBlogBySlug: async (slug) => {
+    set({ loading: true, error: null, selectedBlog: null });
+    try {
+      const res = await axios.get(`${API_URL}/${slug}`);
+      // backend returns { success, data: { blog } }
+      const blog = res.data?.data?.blog || null;
+      set({ selectedBlog: blog, loading: false });
+      return blog;
+    } catch (err) {
+      console.error('Error fetching blog:', err?.response || err);
+      set({ error: err.response?.data?.message || "Error fetching blog", loading: false });
+      return null;
     }
   },
 
   // Tạo blog mới
   createBlog: async (data) => {
     try {
-      const res = await axios.post(`${API_URL}/blogs`, data);
-      const created = res.data?.data?.post || res.data;
-      set({ blogs: [...get().blogs, created] });
+      const res = await axios.blog(`${API_URL}`, data);
+      const created = res.data?.data?.blog || res.data;
+      set({ blogList: [...get().blogs, created] });
     } catch (err) {
       set({ error: err.response?.data?.message || "Error creating blog" });
     }
@@ -51,10 +72,10 @@ const useBlogStore = create((set, get) => ({
   // Cập nhật blog
   updateBlog: async (id, data) => {
     try {
-      const res = await axios.put(`${API_URL}/blogs/${id}`, data);
-      const updated = res.data?.data?.post || res.data;
+      const res = await axios.put(`${API_URL}/${id}`, data);
+      const updated = res.data?.data?.blog || res.data;
       set({
-        blogs: get().blogs.map((b) => (b._id === id ? updated : b)),
+        blogList: get().blogs.map((b) => (b._id === id ? updated : b)),
       });
     } catch (err) {
       set({ error: err.response?.data?.message || "Error updating blog" });
@@ -64,8 +85,8 @@ const useBlogStore = create((set, get) => ({
   // Xóa blog
   deleteBlog: async (id) => {
     try {
-      await axios.delete(`${API_URL}/blogs/${id}`);
-      set({ blogs: get().blogs.filter((b) => b._id !== id) });
+      await axios.delete(`${API_URL}/${id}`);
+      set({ blogList: get().blogs.filter((b) => b._id !== id) });
     } catch (err) {
       set({ error: err.response?.data?.message || "Error deleting blog" });
     }
