@@ -1,8 +1,9 @@
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import HomePage from './pages/HomePage'
-import BlogPage from './pages/Blog/BlogPage'
-import BlogDetailPage from './pages/Blog/BlogDetailPage'
+import ProfilePage from './pages/ProfilePage'
+import AuthRoutes from './routes/AuthRoutes'
+import BlogRoutes from './routes/BlogRoutes'
 
 function App() {
   return (
@@ -10,8 +11,9 @@ function App() {
 		<Navbar />
 		<Routes>
 			<Route path="/" element={<HomePage />} />
-			<Route path="/blogs" element={<BlogPage />} />
-			<Route path="/blogs/:id" element={<BlogDetailPage />} />
+			<Route path="/profile" element={<ProfilePage />} />
+			<Route path="/auth/*" element={<AuthRoutes />} />
+			<Route path="/blogs/*" element={<BlogRoutes />} />
 		</Routes>
   	</div>
   )
