@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useAuthStore } from "../store/authStore";
+import useAuthStore from "../../store/authStore";
 import { useNavigate, useParams } from "react-router-dom";
-import Input from "../components/Input";
+import Input from "../../components/Input";
 import { Lock } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -25,7 +25,7 @@ const ResetPasswordPage = () => {
 
 			toast.success("Password reset successfully, redirecting to login page...");
 			setTimeout(() => {
-				navigate("/login");
+				navigate("/auth/login");
 			}, 2000);
 		} catch (error) {
 			console.error(error);
@@ -35,7 +35,7 @@ const ResetPasswordPage = () => {
 
 	return (
 		<div
-			className='max-w-md w-full bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden'
+			className='max-w-md mx-auto bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden'
 		>
 			<div className='p-8'>
 				<h2 className='text-3xl font-bold mb-6 text-center bg-gradient-to-r from-green-400 to-emerald-500 text-transparent bg-clip-text'>

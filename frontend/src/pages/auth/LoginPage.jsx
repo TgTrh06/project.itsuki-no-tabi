@@ -1,22 +1,30 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Mail, Lock, Loader } from "lucide-react";
 import { Link } from "react-router-dom";
-import Input from "../components/Input";
-import useAuthStore from "../store/authStore";
+import Input from "../../components/Input";
+import useAuthStore from "../../store/authStore";
 
 const LoginPage = () => {
     const [email, setEmail] = useState(""); 
     const [password, setPassword] = useState("");
+    const navigate = useNavigate();
 
     const { login, isLoading, error } = useAuthStore();
 
     const handleLogin = async (e) => {
         e.preventDefault(); // Prevent browser to reload while submiting form
-        await login(email, password);
+        
+        try {
+            await login(email, password);
+            navigate("/");
+        } catch (error) {
+            console.log(error);
+        }
     };
 
     return (
-        <div className='max-w-md w-full bg-gray-800 bg-opacity-50 rounded-2xl shadow-xl overflow-hidden'>
+        <div className='max-w-md mx-auto bg-gray-800 bg-opacity-50 rounded-2xl shadow-xl overflow-hidden'>
             <div className='p-8'>
                 <h2 className='text-3xl font-bold mb-6 text-center bg-gradient-to-r from-green-400 to-emerald-500 text-transparent bg-clip-text'>
                     Welcome Back
@@ -40,7 +48,7 @@ const LoginPage = () => {
                     />
 
                     <div className='flex items-center mb-6'>
-                        <Link to='/forgot-password' className='text-sm text-green-400 hover:underline'>
+                        <Link to='/auth/forgot-password' className='text-sm text-green-400 hover:underline'>
                             Forgot password?
                         </Link>
                     </div>
@@ -58,7 +66,7 @@ const LoginPage = () => {
             <div className='px-8 py-4 bg-gray-900 bg-opacity-50 flex justify-center'>
                 <p className='text-sm text-gray-400'>
                     Don't have an account?{" "}
-                    <Link to='/signup' className='text-green-400 hover:underline'>
+                    <Link to='/auth/signup' className='text-green-400 hover:underline'>
                         Sign up
                     </Link>
                 </p>

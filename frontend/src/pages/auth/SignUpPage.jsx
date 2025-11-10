@@ -1,12 +1,12 @@
-import Input from "../components/Input";
+import Input from "../../components/Input";
 import { Loader, Lock, Mail, User } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import PasswordStrengthMeter from "../components/PasswordStrengthMeter";
-import { useAuthStore } from "../store/authStore";
+import PasswordStrengthMeter from "../../components/PasswordStrengthMeter";
+import useAuthStore from "../../store/authStore";
 
 const SignUpPage = () => {
-	const [name, setName] = useState("");
+	const [username, setUsername] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const navigate = useNavigate();
@@ -17,15 +17,15 @@ const SignUpPage = () => {
 		e.preventDefault();
 
 		try {
-			await signup(email, password, name);
-			navigate("/verify-email");
+			await signup(email, password, username);
+			navigate("/auth/verify-email");
 		} catch (error) {
 			console.log(error);
 		}
 	};
 	return (
 		<div
-			className='max-w-md w-full bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-xl rounded-2xl shadow-xl 
+			className='max-w-md mx-auto bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-xl rounded-2xl shadow-xl 
 			overflow-hidden'
 		>
 			<div className='p-8'>
@@ -38,8 +38,8 @@ const SignUpPage = () => {
 						icon={User}
 						type='text'
 						placeholder='Full Name'
-						value={name}
-						onChange={(e) => setName(e.target.value)}
+						value={username}
+						onChange={(e) => setUsername(e.target.value)}
 					/>
 					<Input
 						icon={Mail}
@@ -63,8 +63,8 @@ const SignUpPage = () => {
 						font-bold rounded-lg shadow-lg hover:from-green-600
 						hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
 						 focus:ring-offset-gray-900 transition duration-200'
-						whileHover={{ scale: 1.02 }}
-						whileTap={{ scale: 0.98 }}
+						whilehover={{ scale: 1.02 }}
+						whiletap={{ scale: 0.98 }}
 						type='submit'
 						disabled={isLoading}
 					>
@@ -75,7 +75,7 @@ const SignUpPage = () => {
 			<div className='px-8 py-4 bg-gray-900 bg-opacity-50 flex justify-center'>
 				<p className='text-sm text-gray-400'>
 					Already have an account?{" "}
-					<Link to={"/login"} className='text-green-400 hover:underline'>
+					<Link to={"/auth/login"} className='text-green-400 hover:underline'>
 						Login
 					</Link>
 				</p>

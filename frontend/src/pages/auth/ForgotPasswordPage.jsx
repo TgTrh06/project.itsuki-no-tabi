@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useAuthStore } from "../store/authStore";
-import Input from "../components/Input";
+import useAuthStore from "../../store/authStore";
+import Input from "../../components/Input";
 import { ArrowLeft, Loader, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -18,7 +18,7 @@ const ForgotPasswordPage = () => {
 
 	return (
 		<div
-			className='max-w-md w-full bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden'
+			className='max-w-md mx-auto bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden'
 		>
 			<div className='p-8'>
 				<h2 className='text-3xl font-bold mb-6 text-center bg-gradient-to-r from-green-400 to-emerald-500 text-transparent bg-clip-text'>
@@ -60,7 +60,7 @@ const ForgotPasswordPage = () => {
 			</div>
 
 			<div className='px-8 py-4 bg-gray-900 bg-opacity-50 flex justify-center'>
-				<Link to={"/login"} className='text-sm text-green-400 hover:underline flex items-center'>
+				<Link to={"/auth/login"} className='text-sm text-green-400 hover:underline flex items-center'>
 					<ArrowLeft className='h-4 w-4 mr-2' /> Back to Login
 				</Link>
 			</div>
