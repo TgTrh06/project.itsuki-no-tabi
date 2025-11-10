@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
-const postSchema = new mongoose.Schema(
+const blogSchema = new mongoose.Schema(
   {
     author: {
       type: Schema.Types.ObjectId,
@@ -56,10 +56,10 @@ const postSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-postSchema.pre("save", function (next) {
+blogSchema.pre("save", function (next) {
   this.updatedAt = Date.now();
   next();
 });
 
-export const Post = mongoose.model("Post", postSchema);
-// export default mongoose.model("Post", postSchema);
+export const Blog = mongoose.model("Blog", blogSchema);
+// export default mongoose.model("Blog", blogSchema);

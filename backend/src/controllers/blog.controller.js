@@ -1,10 +1,10 @@
-import { Post } from "../models/post.model.js";
+import { Blog } from "../models/blog.model.js";
 import { User } from "../models/user.model.js";
 
-export const getAllPosts = async (req, res) => {
+export const getAllBlogs = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
+        const limit = parseInt(req.query.limit) || 9;
         const skip = (page - 1) * limit;
 
         const query = {};
@@ -29,7 +29,7 @@ export const getAllPosts = async (req, res) => {
             const author = await User.findOne({ username: creator }).select("_id");
             
             if (!author) {
-                return res.status(404).json({ success: false, message: "No post found!" });
+                return res.status(404).json({ success: false, message: "No blog found!" });
             }
 
             query.author = author._id;
@@ -59,25 +59,25 @@ export const getAllPosts = async (req, res) => {
             }
         }
 
-        // Show only published posts unless specifically requested
+        // Show only published blogs unless specifically requested
         if (published === "true") {
             query.isPublished = true;
         }
 
-        const [posts, total] = await Promise.all([
-            Post.find(query)
+        const [blogs, total] = await Promise.all([
+            Blog.find(query)
                 .populate("author", "username")
                 .sort(sortObj)
                 .skip(skip)
                 .limit(limit),
-            Post.countDocuments(query)
+            Blog.countDocuments(query)
         ]);
 
         res.status(200).json({
             success: true,
-            message: "Posts retrieved successfully",
+            message: "Blogs retrieved successfully",
             data: {
-                posts,
+                blogs,
                 pagination: {
                     page,
                     limit,
@@ -88,45 +88,51 @@ export const getAllPosts = async (req, res) => {
             }
         });
     } catch (error) {
-        console.log("Error in getAllPosts: ", error);
+        console.log("Error in getAllBlogs: ", error);
         res.status(500).json({
             success: false,
-            message: "Error in getting all posts",
+            message: "Error in getting all blogs",
             error: error.message,
         });
     }
 };
 
-export const getPost = async (req, res) => {
+export const getBlog = async (req, res) => {
     try {
-        const post = await Post.findOne({ slug: req.params.slug })
-            .populate('author', 'username email');
-        console.log("Found post:", post);
+        const param = req.params.slug;
+        let blog = null;
 
-        if (!post) {
+        // If param is a valid ObjectId, try findById first (frontend may pass _id)
+        if (param && /^[0-9a-fA-F]{24}$/.test(param)) {
+            blog = await Blog.findById(param).populate('author', 'username email');
+        }
+
+        // Fallback: try find by slug
+        if (!blog) {
+            blog = await Blog.findOne({ slug: param }).populate('author', 'username email');
+        }
+
+        console.log('Found blog:', blog);
+
+        if (!blog) {
             return res.status(404).json({
                 success: false,
-                message: "Post not found"
+                message: 'Blog not found'
             });
-        };
+        }
 
-        // Increment views
-        if (!post.meta) post.meta = { views: 0 };
-        post.meta.views += 1;
-        await post.save();
+        // NOTE: view increment is handled by `increaseView` middleware which supports id or slug.
 
         res.status(200).json({
             success: true,
-            message: "Post retrieved successfully",
-            data: {
-                post
-            }
+            message: 'Blog retrieved successfully',
+            data: { blog }
         });
     } catch (error) {
-        console.log("Error in getPost: ", error);
-        res.status(500).json({
+        console.log('Error in getBlog: ', error);
+        return res.status(500).json({
             success: false,
-            message: "Error in getting a single post",
+            message: 'Error in getting a single blog',
             error: error.message,
         });
     }
