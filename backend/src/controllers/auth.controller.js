@@ -10,9 +10,9 @@ import { generateTokenAndSetCookie } from '../utils/generateTokenAndSetCookie.js
 
 export const signup = async (req, res) => {
     // Handle signup logic
-    const {email, password, name} = req.body;
+    const {email, password, username} = req.body;
     try {
-        if (!email || !password || !name) {
+        if (!email || !password || !username) {
             throw new Error('Missing required fields');
         }
 
@@ -29,7 +29,7 @@ export const signup = async (req, res) => {
         const user = new User({
             email,
             password: hashedPassword,
-            name,
+            username,
             verificationToken,
             verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000
         })

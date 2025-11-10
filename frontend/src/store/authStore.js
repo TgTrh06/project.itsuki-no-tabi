@@ -7,7 +7,7 @@ const API_URL = import.meta.env.MODE === "development" ? "http://localhost:5000/
 axios.defaults.withCredentials = true;
 
 // Create custom hook Zustand
-export const useAuthStore = create((set) => ({
+const useAuthStore = create((set) => ({
     user: null,
     isAuthenticated: false,
     error: null,
@@ -15,10 +15,10 @@ export const useAuthStore = create((set) => ({
     isCheckingAuth: true,
     message: null,
 
-    signup: async (email, password, name) => {
+    signup: async (email, password, username) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await axios.post(`${API_URL}/signup`, { email, password, name });
+            const response = await axios.post(`${API_URL}/signup`, { email, password, username });
             set({ 
                 user: response.data.user, 
                 isAuthenticated: true, 
@@ -32,7 +32,9 @@ export const useAuthStore = create((set) => ({
     login: async (email, password) => {
         set({ isLoading: true, error: null });
         try {
+            console.log('Attempting login with:', { email });
             const response = await axios.post(`${API_URL}/login`, { email, password });
+            console.log('Login response:', response.data);
             set({ 
                 user: response.data.user,
                 isAuthenticated: true,
@@ -40,6 +42,7 @@ export const useAuthStore = create((set) => ({
                 isLoading: false,
             });
         } catch (error) {
+            console.error('Login error:', error.response || error);
             set({
                 error: error.response?.data?.message || "Error logging in", 
                 isLoading: false,
@@ -112,3 +115,5 @@ export const useAuthStore = create((set) => ({
 		}
 	},
 }))
+
+export default useAuthStore;
