@@ -6,6 +6,8 @@ import cookieParser from 'cookie-parser';
 import { connectDB } from './config/db.js';
 
 import authRouter from './routes/auth.route.js'; 
+import destinationRouter from './routes/destination.route.js';
+import articleRouter from './routes/article.route.js';
 import blogRouter from './routes/blog.route.js';
 
 dotenv.config();
@@ -25,6 +27,8 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRouter);
+app.use('/api/destinations/', destinationRouter);
+app.use('/api/article/', articleRouter);
 app.use('/api/blogs', blogRouter);
 
 app.listen(PORT, () => {
