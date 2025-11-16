@@ -1,71 +1,270 @@
 import { Link, useNavigate } from "react-router-dom"
-import { User, LogOut } from "lucide-react"
-import { useState } from "react"
+import { User, LogOut, ChevronDown } from "lucide-react"
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import useAuthStore from "../store/authStore"
+import useDestinationStore from "../store/destinationStore"
+
+const dropdownVariants = {
+  hidden: { opacity: 0, y: -10 },
+  visible: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -10 }
+}
+
+// Hàm phân loại dữ liệu để tạo layout nhiều cột
+const categorizeDestinations = (destinations) => {
+  const allDestinations = destinations.map(d => ({
+    title: d.title,
+    slug: d.slug,
+    link: `/destinations/${d.slug}`
+  }));
+
+  // Logic giả định: 10 điểm đến đầu tiên là "Top Destinations"
+  const topDestinations = allDestinations.slice(0, 10);
+
+  // Logic giả định: Phần còn lại là "Prefectures" (chia thành 3 cột)
+  const prefectures = allDestinations.slice(10);
+
+  const numPrefectureColumns = 3;
+  const chunkSize = Math.ceil(prefectures.length / numPrefectureColumns);
+
+  const prefectureColumns = [];
+  for (let i = 0; i < numPrefectureColumns; i++) {
+    prefectureColumns.push(prefectures.slice(i * chunkSize, i * chunkSize + chunkSize));
+  }
+
+  return {
+    'Top Destinations': topDestinations,
+    'Prefectures': prefectureColumns,
+  };
+};
+
+
+function NavDropdown({ label, categorizedItems, isOpen, onToggle }) {
+  const topDestinations = categorizedItems['Top Destinations'] || [];
+  const prefectureColumns = categorizedItems['Prefectures'] || [];
+
+  return (
+    <div className="relative">
+      <button
+        onClick={onToggle}
+        className="flex items-center gap-1 px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors"
+      >
+        {label}
+        <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={dropdownVariants}
+            // SỬA: Tăng chiều rộng và căn giữa để chứa nhiều cột
+            className="absolute left-0 mt-3 w-[800px] bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4 origin-top"
+            style={{ transform: 'translateX(-50%)', left: '0%' }}
+          >
+            <Link to="/destinations" className="flex items-gap-2 text-blue-600 mb-4 font-medium">
+              <span role="img" aria-label="map-pin">📍</span>
+              Japan Map
+            </Link>
+
+            {/* Cấu trúc Grid 4 cột chính */}
+            <div className="grid grid-cols-4 gap-x-8 max-h-[400px] overflow-y-auto pr-4">
+
+              {/* Cột 1: Top Destinations */}
+              <div className="col-span-1">
+                <h3 className="font-bold text-gray-900 mb-2">Top Destinations</h3>
+                <div className="space-y-1 text-sm">
+                  {topDestinations.map((item) => (
+                    <Link
+                      key={item.title}
+                      to={item.link}
+                      className="block text-gray-700 hover:text-blue-600"
+                      onClick={onToggle}
+                    >
+                      {item.title}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* Cột 2, 3, 4: Prefectures */}
+              {prefectureColumns.map((column, index) => (
+                <div key={index} className="col-span-1">
+                  {/* Tiêu đề "Prefectures" chỉ hiện ở cột đầu tiên, các cột sau dùng div rỗng để giữ khoảng cách */}
+                  {index === 0 ? (
+                    <h3 className="font-bold text-gray-900 mb-2">Prefectures</h3>
+                  ) : (
+                    <div className="h-6 mb-2"></div>
+                  )}
+
+                  <div className="space-y-1 text-sm">
+                    {column.map((item) => (
+                      <Link
+                        key={item.title}
+                        to={item.link}
+                        className="block text-gray-700 hover:text-blue-600"
+                        onClick={onToggle}
+                      >
+                        {item.title}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuthStore()
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const { destinations, fetchDestinations } = useDestinationStore()
+  const [openDropdown, setOpenDropdown] = useState(null)
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
   const navigate = useNavigate()
+
+  // Tự động đóng dropdown khi click ra ngoài
+  useEffect(() => {
+    const closeDropdowns = (e) => {
+      // Chỉ đóng nếu click nằm ngoài khu vực dropdown/button
+      if (!e.target.closest('.relative')) {
+        setOpenDropdown(null)
+        setIsUserDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', closeDropdowns)
+    return () => document.removeEventListener('mousedown', closeDropdowns)
+  }, [])
+
+  useEffect(() => {
+    fetchDestinations({ page: 1, limit: 100 }).catch(() => { })
+  }, [fetchDestinations])
 
   const handleLogout = async () => {
     try {
       await logout()
-      setIsDropdownOpen(false)
+      setIsUserDropdownOpen(false)
       navigate("/")
     } catch (error) {
       console.error('Logout error:', error)
     }
   }
 
+  // ⚠️ SỬ DỤNG HÀM PHÂN LOẠI MỚI Ở ĐÂY
+  const categorizedDestinationItems = categorizeDestinations(destinations);
+
+
   return (
-    <nav className="sticky top-0 z-50 bg-white shadow-md px-4 py-2">
-      <div className="flex justify-between items-center">
-        <h1 className="text-xl font-bold text-green-600">        
-          <Link to="/" className="hover:text-purple-400">Itsuki no Tabi</Link>
-        </h1>
+    <nav className="fixed top-0 left-0 right-0 z-40 bg-white shadow-md border-b border-gray-200">
+      <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+        {/* Left: Logo + Navigation */}
+        <div className="flex items-center gap-6">
+          <Link to="/" className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors">
+            Itsuki no Tabi
+          </Link>
 
-        <div className="flex items-center space-x-6">
-          <div className="space-x-4">
-            <Link to="/blogs" className="text-sm text-green-400 hover:text-pink-400">Blog</Link>
-            <Link to="/tours" className="text-sm text-green-400 hover:text-pink-400">Tour</Link>
-          </div>
-
-          {isAuthenticated ? (
-            <div className="relative">
-              <button 
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center space-x-2 text-green-600 hover:text-purple-400"
-              >
-                <User className="w-6 h-6" />
-                <span className="text-sm">{user?.username}</span>
-              </button>
-
-              {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1">
-                  <Link
-                    to="/profile"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={() => setIsDropdownOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="space-x-4">
-              <Link to="/auth/login" className="text-sm text-green-400 hover:text-pink-400">Login</Link>
-              <Link to="/auth/signup" className="text-sm text-green-400 hover:text-pink-400">Sign Up</Link>
-            </div>
+          {/* Navigation Tabs */}
+          {destinations.length > 0 && (
+            <NavDropdown
+              label="Destinations"
+              categorizedItems={categorizedDestinationItems} // TRUYỀN DỮ LIỆU ĐÃ PHÂN LOẠI
+              isOpen={openDropdown === 'destinations'}
+              onToggle={() => setOpenDropdown(openDropdown === 'destinations' ? null : 'destinations')}
+            />
           )}
+
+          <Link to="/articles" className="px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors">
+            Articles
+          </Link>
+
+          <Link to="/booking" className="px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors">
+            Booking
+          </Link>
+        </div>
+
+        {/* Right: Auth Tabs (Đã sửa chiều rộng và border) */}
+        <div className="relative w-48">
+          <button
+            onClick={() => { setIsUserDropdownOpen(!isUserDropdownOpen); setOpenDropdown(null); }}
+            className={`flex items-center justify-between w-full px-3 py-2 transition-colors rounded-lg 
+              ${isUserDropdownOpen
+                ? 'bg-blue-50 text-blue-600 border border-blue-500'
+                : 'text-gray-700 border border-gray-300 hover:border-blue-500 hover:text-blue-600'
+              }`}
+          >
+            <div className="flex items-center gap-2">
+              <User className="w-5 h-5" />
+              {isAuthenticated ? user?.name : 'Account'}
+            </div>
+            <ChevronDown className={`w-4 h-4 transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          <AnimatePresence>
+            {isUserDropdownOpen && (
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                variants={dropdownVariants}
+                className="absolute right-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+              >
+                <div className="py-1">
+                  {isAuthenticated ? (
+                    <>
+                      {user?.role === 'admin' ? (
+                        <Link
+                          to="/admin/profile"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                        >
+                          Admin Dashboard
+                        </Link>
+                      ) : (
+                        <Link
+                          to="/user/profile"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                        >
+                          My Profile
+                        </Link>
+                      )}
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Logout
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        to="/auth/login"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                        onClick={() => setIsUserDropdownOpen(false)}
+                      >
+                        Login
+                      </Link>
+                      <Link
+                        to="/auth/register"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                        onClick={() => setIsUserDropdownOpen(false)}
+                      >
+                        Sign Up
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </nav>
