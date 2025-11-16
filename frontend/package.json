@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@amcharts/amcharts5": "^5.14.4",
+    "@amcharts/amcharts5-geodata": "^5.1.5",
     "axios": "^1.12.2",
     "framer-motion": "^12.23.24",
     "lucide-react": "^0.546.0",
