@@ -1,11 +1,23 @@
-import { Destination } from "../models/destination.model";
+import { Destination } from "../models/destination.model.js";
 
+// Get all
 export const getAllDestinations = async (req, res) => {
-    const destinations = await Destination.find();
+    try {
+        const page = Math.max(parseInt(req.query.page) || 1, 1);
+        const limit = Math.max(parseInt(req.query.limit) || 20, 1);
+        const skip = (page - 1) * limit;
 
-    res.json(destinations);
+        const total = await Destination.countDocuments();
+        const destinations = await Destination.find().sort({ title: 1 }).skip(skip).limit(limit);
+        const pages = Math.ceil(total / limit) || 1;
+
+        res.json({ data: destinations, total, page, pages });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 };
 
+// Get by slug
 export const getDestinationBySlug = async (req, res) => {
     const { slug } = req.params;
     
@@ -13,4 +25,17 @@ export const getDestinationBySlug = async (req, res) => {
     if (!destination) return res.status(404).json({ message: "Not found" });
 
     res.json(destination);
+};
+
+// Update
+export const updateDestination = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updated = await Destination.findByIdAndUpdate(id, req.body, { new: true });
+        if (!updated) return res.status(404).json({ message: "Destination not found" });
+        
+        res.json(updated);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 };

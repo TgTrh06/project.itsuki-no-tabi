@@ -5,14 +5,12 @@ const destinationSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
-      unique: true,
-      trim: true,
+      unique: true
     },
     slug: {
       type: String,
       required: true,
-      unique: true,
-      lowercase: true,
+      unique: true
     },
     svgId: {
       type: String,
@@ -28,6 +26,13 @@ const destinationSchema = new mongoose.Schema(
     region: {
       type: String,
     },
+    articles: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Article",
+        required: true
+      }
+    ]
   },
   { timestamps: true }
 );
