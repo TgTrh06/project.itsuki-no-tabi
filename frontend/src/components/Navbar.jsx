@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useLocation } from "react-router-dom"
 import { User, LogOut, ChevronDown } from "lucide-react"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -13,16 +13,20 @@ const dropdownVariants = {
 
 // Hàm phân loại dữ liệu để tạo layout nhiều cột
 const categorizeDestinations = (destinations) => {
-  const allDestinations = destinations.map(d => ({
+  // Sắp xếp destinations theo số bài viết giảm dần
+  const sorted = [...destinations].sort((a, b) => (b.articleCount || 0) - (a.articleCount || 0));
+  
+  const allDestinations = sorted.map(d => ({
     title: d.title,
     slug: d.slug,
-    link: `/destinations/${d.slug}`
+    link: `/destinations/${d.slug}`,
+    articleCount: d.articleCount || 0
   }));
 
-  // Logic giả định: 10 điểm đến đầu tiên là "Top Destinations"
+  // Top 5-10 destinations với nhiều bài viết nhất là "Top Destinations"
   const topDestinations = allDestinations.slice(0, 10);
 
-  // Logic giả định: Phần còn lại là "Prefectures" (chia thành 3 cột)
+  // Phần còn lại là "Prefectures" (chia thành 3 cột)
   const prefectures = allDestinations.slice(10);
 
   const numPrefectureColumns = 3;
@@ -80,10 +84,10 @@ function NavDropdown({ label, categorizedItems, isOpen, onToggle }) {
                     <Link
                       key={item.title}
                       to={item.link}
-                      className="block text-muted-foreground hover:text-primary transition-colors"
+                      className="flex items-center justify-between text-muted-foreground hover:text-primary transition-colors group"
                       onClick={onToggle}
                     >
-                      {item.title}
+                      <span>{item.title}</span>
                     </Link>
                   ))}
                 </div>
@@ -128,6 +132,7 @@ export default function Navbar() {
   const [openDropdown, setOpenDropdown] = useState(null)
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
 
   // Tự động đóng dropdown khi click ra ngoài
   useEffect(() => {
@@ -179,11 +184,21 @@ export default function Navbar() {
             />
           )}
 
-          <Link to="/articles" className="px-3 py-2 text-foreground hover:text-primary transition-colors">
+          <Link
+            to="/articles"
+            className={`px-3 py-2 text-foreground hover:text-primary transition-colors ${
+              location.pathname === '/articles' ? 'border-b-2 border-primary p-2.5' : ''
+            }`}
+          >
             Articles
           </Link>
 
-          <Link to="/planning" className="px-3 py-2 text-foreground hover:text-primary transition-colors">
+          <Link
+            to="/planning"
+            className={`px-3 py-2 text-foreground hover:text-primary transition-colors ${
+              location.pathname === '/planning' ? 'border-b-2 border-primary p-2.5' : ''
+            }`}
+          >
             Planning
           </Link>
         </div>
