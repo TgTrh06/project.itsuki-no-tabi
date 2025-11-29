@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import useArticleStore from '../../store/articleStore'
+import apiClient from '../../utils/api'
 import useCommentStore from '../../store/commentStore'
 import useAuthStore from '../../store/authStore'
 import usePlanStore from '../../store/planStore'
@@ -26,11 +27,13 @@ export default function ArticleDetailPage() {
 
   const [article, setArticle] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [nearbyArticles, setNearbyArticles] = useState([])
+  const [nearbyLoading, setNearbyLoading] = useState(false)
 
   const [commentContent, setCommentContent] = useState('')
   const [isLiking, setIsLiking] = useState(false)
 
-  const { getArticleBySlug, likeArticle } = useArticleStore()
+  const { getArticleBySlug, likeArticle, fetchArticles } = useArticleStore()
   const { comments, fetchComments, addComment, loading: commentLoading } = useCommentStore()
 
   useEffect(() => {
@@ -40,7 +43,28 @@ export default function ArticleDetailPage() {
         const { article: fetchedArticle } = await getArticleBySlug(city, slug)
         setArticle(fetchedArticle)
 
-        if (fetchedArticle) fetchComments(fetchedArticle._id)
+        if (fetchedArticle) {
+          fetchComments(fetchedArticle._id)
+
+          // Fetch nearby articles from same destination
+          try {
+            setNearbyLoading(true)
+            // Pass destination id or slug (prefer id if populated)
+            const destParam = fetchedArticle.destination?._id || fetchedArticle.destination || ''
+            const nearbyRes = await fetchArticles({ destination: destParam, limit: 3 })
+            // fetchArticles returns an object: { data, total, page, pages }
+            const nearbyList = (nearbyRes && (nearbyRes.data || nearbyRes.data === null)) ? nearbyRes.data : nearbyRes.data || nearbyRes.data
+            // Normalize to array (defensive)
+            const arr = Array.isArray(nearbyList) ? nearbyList : (nearbyRes?.data || nearbyRes?.data?.data || [])
+            const filtered = arr.filter(a => a._id !== fetchedArticle._id).slice(0, 2)
+            setNearbyArticles(filtered)
+          } catch (err) {
+            console.error('Error fetching nearby articles:', err)
+            setNearbyArticles([])
+          } finally {
+            setNearbyLoading(false)
+          }
+        }
       } catch (err) {
         console.error(err)
       } finally {
@@ -48,7 +72,7 @@ export default function ArticleDetailPage() {
       }
     }
     fetch()
-  }, [city, slug, getArticleBySlug, fetchComments])
+  }, [city, slug, getArticleBySlug, fetchComments, fetchArticles])
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault()
@@ -77,32 +101,44 @@ export default function ArticleDetailPage() {
     }
     if (isLiking) return;
 
+    // Optimistic update
+    const userId = user._id;
+    const currentLikes = article.meta?.likes || [];
+    const isCurrentlyLiked = currentLikes.some(id => String(id) === String(userId));
+
+    let newLikesArray;
+    if (isCurrentlyLiked) {
+      newLikesArray = currentLikes.filter(id => String(id) !== String(userId));
+    } else {
+      newLikesArray = [...currentLikes, userId];
+    }
+
+    // Update UI immediately
+    setArticle((prev) => ({
+      ...prev,
+      meta: {
+        ...prev.meta,
+        likes: newLikesArray
+      }
+    }));
+
     setIsLiking(true);
     try {
       await likeArticle(article._id);
-
-      const userIdString = user._id.toString();
-      const currentLikes = article.meta?.likes || [];
-      const isCurrentlyLiked = currentLikes.some(id => id.toString() === userIdString);
-
-      let newLikesArray;
       if (isCurrentlyLiked) {
-        newLikesArray = currentLikes.filter(id => id.toString() !== userIdString);
         toast.success("Unliked article.");
       } else {
-        newLikesArray = [...currentLikes, user._id];
         toast.success("Liked article!");
       }
-
-      setArticle((prevArticle) => ({
-        ...prevArticle,
-        meta: {
-          ...(prevArticle.meta || {}),
-          likes: newLikesArray,
-        },
-      }));
-
     } catch (error) {
+      // Revert if error
+      setArticle((prev) => ({
+        ...prev,
+        meta: {
+          ...prev.meta,
+          likes: currentLikes
+        }
+      }));
       toast.error(error.message || "Error in like article.");
     } finally {
       setIsLiking(false);
@@ -119,13 +155,13 @@ export default function ArticleDetailPage() {
   if (!article) return <div className="p-4">Article not found</div>
 
   const likedByUser = article.meta?.likes?.some(
-    (id) => id.toString() === user?._id?.toString()
+    (id) => String(id) === String(user?._id)
   )
   const likesCount = article.meta?.likes?.length || 0;
   const isPlanned = plannedItems.some(item => item._id === article?._id)
 
   return (
-    <div className="max-w-7xl mx-auto p-4 mt-20">
+    <div className="max-w-6xl mx-auto p-4 mt-20">
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
@@ -133,6 +169,8 @@ export default function ArticleDetailPage() {
         <div className="lg:col-span-2">
           {/* Article Header */}
           <div className="mb-6">
+            <h1 className="text-4xl font-bold mb-3 text-foreground font-serif">{article.title}</h1>
+
             <p className="text-sm text-muted-foreground mb-2">
               {new Date(article.createdAt).toLocaleDateString('en-US', {
                 year: 'numeric',
@@ -140,37 +178,49 @@ export default function ArticleDetailPage() {
                 day: 'numeric'
               })} • {article.readTime || '6'} min read
             </p>
-            <h1 className="text-4xl font-bold mb-3 text-foreground font-serif">{article.title}</h1>
-            <p className="text-xl text-muted-foreground mb-4">{article.description || 'The best places to explore'}</p>
 
-            {/* Author Info */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                <span className="text-muted-foreground font-semibold">
-                  {article.author?.name?.charAt(0) || 'A'}
-                </span>
+            {/* Author Info + Add to Plan in single row */}
+            <div className="flex items-center justify-between gap-3 my-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                  <span className="text-muted-foreground font-semibold">
+                    {article.author?.name?.charAt(0) || 'A'}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">By {article.author?.name}</p>
+                  <p className="text-xs text-muted-foreground">Community writer</p>
+                </div>
               </div>
+
               <div>
-                <p className="text-sm font-medium text-foreground">By {article.author?.name}</p>
-                <p className="text-xs text-muted-foreground">Community writer</p>
+                {user && (
+                  <button
+                    onClick={handleAddToPlan}
+                    disabled={isPlanned}
+                    className={`px-4 py-2 rounded-lg font-semibold transition-colors shadow-sm
+                      ${isPlanned
+                        ? 'bg-primary text-primary-foreground cursor-default'
+                        : 'bg-primary text-primary-foreground hover:opacity-90'}
+                    `}
+                  >
+                    {isPlanned ? '✓ Added to Plan' : '+ Add to Plan'}
+                  </button>
+                )}
               </div>
             </div>
-
-            {/* Add to Plan Button */}
-            {user && (
-              <button
-                onClick={handleAddToPlan}
-                disabled={isPlanned}
-                className={`px-4 py-2 rounded-lg font-semibold transition-colors shadow-sm
-                  ${isPlanned
-                    ? 'bg-primary text-primary-foreground cursor-default'
-                    : 'bg-primary text-primary-foreground hover:opacity-90'}
-                `}
-              >
-                {isPlanned ? '✓ Added to Plan' : '+ Add to Plan'}
-              </button>
-            )}
           </div>
+
+          {/* Cover Image (if available) */}
+          {article.imageUrl && (
+            <div className="mb-4 w-full h-[360px] overflow-hidden rounded-xl border border-border">
+              <img
+                src={article.imageUrl.startsWith('http') ? article.imageUrl : `${apiClient.defaults.baseURL.replace(/\/api\/?$/, '')}${article.imageUrl}`}
+                alt={article.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
 
           {/* Article Content */}
           <div
@@ -185,8 +235,8 @@ export default function ArticleDetailPage() {
               disabled={isLiking}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold transition-all shadow-sm
                 ${likedByUser
-                  ? 'bg-accent text-accent-foreground border-2 border-primary hover:bg-accent/80'
-                  : 'bg-card text-card-foreground border-2 border-border hover:bg-muted'}
+                  ? 'bg-primary text-primary-foreground hover:opacity-90'
+                  : 'bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground'}
                 disabled:opacity-70`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -202,7 +252,7 @@ export default function ArticleDetailPage() {
               <span className="font-medium">{comments.length}</span>
             </div>
 
-            <button className="flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold transition-all bg-card text-card-foreground border-2 border-border hover:bg-muted shadow-sm">
+            <button className="flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold transition-all bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground shadow-sm">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
               </svg>
@@ -232,7 +282,11 @@ export default function ArticleDetailPage() {
                 </button>
               </form>
             ) : (
-              <p className="text-destructive">Please login to comment.</p>
+              <p className="text-destructive">
+                Please
+                <Link to="/login" className="text-primary hover:underline ml-1">Login </Link> 
+                to comment.
+              </p>
             )}
           </div>
 
@@ -272,7 +326,7 @@ export default function ArticleDetailPage() {
           <div className="sticky top-24 space-y-6">
 
             {/* Information Card */}
-            <div className="bg-destructive text-destructive-foreground p-4 rounded-t-lg shadow-md">
+            <div className="bg-primary text-primary-foreground p-4 rounded-t-lg shadow-md">
               <div className="flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
@@ -303,12 +357,11 @@ export default function ArticleDetailPage() {
                 </div>
                 <div className="p-4">
                   <div className="flex items-start gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-destructive mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary mt-0.5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                     </svg>
                     <div>
-                      <p className="font-semibold text-foreground">{city || 'Location'}</p>
-                      <a href="#" className="text-sm text-primary hover:underline">(Directions)</a>
+                      <p className="font-semibold text-primary">{city || 'Location'}</p>
                     </div>
                   </div>
                 </div>
@@ -318,28 +371,48 @@ export default function ArticleDetailPage() {
             {/* Explore Nearby */}
             <div className="bg-card border border-border rounded-lg p-4 shadow-md">
               <h3 className="font-bold text-lg mb-4 text-foreground">EXPLORE NEARBY</h3>
-              <div className="space-y-4">
-                <div className="flex gap-3">
-                  <div className="w-20 h-20 bg-muted rounded flex-shrink-0"></div>
-                  <div>
-                    <h4 className="font-semibold text-sm text-foreground mb-1">Related Article</h4>
-                    <p className="text-xs text-muted-foreground">By Author Name</p>
-                  </div>
+              {nearbyLoading ? (
+                <p className="text-sm text-muted-foreground">Loading nearby articles...</p>
+              ) : nearbyArticles.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No other articles in this destination.</p>
+              ) : (
+                <div className="space-y-4">
+                  {nearbyArticles.map((nearby) => (
+                    <Link
+                      key={nearby._id}
+                      to={`/articles/${nearby.destination?.slug || city}/${nearby.slug}`}
+                      className="flex gap-3 hover:opacity-80 transition-opacity"
+                    >
+                      <div className="w-20 h-20 bg-muted rounded flex-shrink-0 overflow-hidden">
+                        {(nearby.imageUrl || nearby.cover) ? (
+                          <img
+                            src={nearby.imageUrl || nearby.cover}
+                            alt={nearby.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-muted flex items-center justify-center text-xs text-muted-foreground">No image</div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-sm text-foreground mb-1 line-clamp-2">
+                          {nearby.title}
+                        </h4>
+                        <p className="text-xs text-muted-foreground">By {nearby.author?.name || 'Unknown'}</p>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
-                <div className="flex gap-3">
-                  <div className="w-20 h-20 bg-muted rounded flex-shrink-0"></div>
-                  <div>
-                    <h4 className="font-semibold text-sm text-foreground mb-1">Another Place</h4>
-                    <p className="text-xs text-muted-foreground">By Author Name</p>
-                  </div>
-                </div>
-              </div>
-              <button className="w-full mt-4 text-primary font-semibold text-sm hover:underline">
+              )}
+              <a
+                href={`/destinations/${city}`}
+                className="w-full mt-4 block text-center text-primary font-semibold text-sm hover:underline"
+              >
                 Discover {city || 'More'}
-              </button>
+              </a>
             </div>
 
-            {/* Top Articles */}
+            {/* Top Articles
             <div className="bg-card border border-border rounded-lg p-4 shadow-md">
               <h3 className="font-bold text-lg mb-4 text-foreground">TOP ARTICLES</h3>
               <div className="space-y-3">
@@ -353,7 +426,7 @@ export default function ArticleDetailPage() {
                   • Local food guide
                 </div>
               </div>
-            </div>
+            </div> */}
 
           </div>
         </div>

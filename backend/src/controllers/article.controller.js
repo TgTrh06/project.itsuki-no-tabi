@@ -8,7 +8,7 @@ import slugify from "../utils/slugify.js";
 export const getAllArticles = async (req, res) => {
     try {
         const filter = {};
-        
+
         // Handle destination filter (can be ID or slug)
         if (req.query.destination) {
             let destination;
@@ -24,9 +24,9 @@ export const getAllArticles = async (req, res) => {
                 filter.destination = destination._id;
             }
         }
-        
+
         if (req.query.author) filter.author = req.query.author;
-        
+
         // Handle interest filter (can be ID or slug)
         if (req.query.interest) {
             const { Interest } = await import("../models/interest.model.js");
@@ -99,20 +99,19 @@ export const getArticleByCityAndSlug = async (req, res) => {
             return res.status(404).json({ message: "Destination not found" });
         }
 
-        // Find article by slug and destination
-        const article = await Article.findOne({
-            slug: articleSlug,
-            destination: destination._id
-        }).populate("author", "name avatar").populate("destination", "title");
+        // Find article by slug and destination and increment view atomically
+        const article = await Article.findOneAndUpdate(
+            {
+                slug: articleSlug,
+                destination: destination._id
+            },
+            { $inc: { 'meta.views': 1 } },
+            { new: true }
+        ).populate("author", "name avatar").populate("destination", "title");
 
         if (!article) {
             return res.status(404).json({ message: "Article not found" });
         }
-
-        // Increase view (stored under meta.views)
-        article.meta = article.meta || {};
-        article.meta.views = (article.meta.views || 0) + 1;
-        await article.save();
 
         // Get comments of current article
         const comments = await Comment.find({ article: article._id })
@@ -129,13 +128,44 @@ export const getArticleByCityAndSlug = async (req, res) => {
 // Create an article
 export const createArticle = async (req, res) => {
     try {
-        const { title, summary, content, imageUrl, destination, interests } = req.body;
+        // Handle multipart/form-data fields and file
+        let { title, summary, content, imageUrl, destination, interests, location } = req.body || {}
 
-        if (!title) { return res.status(400).json({ message: "Article title is required" }) };
-        if (!summary) { return res.status(400).json({ message: "Article summary is required" }) };
-        if (!content) { return res.status(400).json({ message: "Article content is required" }) };
-        if (!destination) { return res.status(400).json({ message: "Article destination is required" }) };
-        if (!interests) { return res.status(400).json({ message: "Article interest is required" }) };
+        // If interests or location are sent as JSON strings, parse them
+        try {
+            if (typeof interests === 'string' && interests.trim()) {
+                interests = JSON.parse(interests)
+            }
+        } catch (e) {
+            // fallback: comma separated
+            interests = typeof interests === 'string' ? interests.split(',').map(s => s.trim()).filter(Boolean) : interests
+        }
+
+        try {
+            if (typeof location === 'string' && location.trim()) {
+                location = JSON.parse(location)
+            }
+        } catch (e) {
+            location = location
+        }
+
+        // If a file was uploaded, prefer that as imageUrl (make absolute URL)
+        if (req.file) {
+            const host = req.get('host')
+            const protocol = req.protocol
+            imageUrl = `${protocol}://${host}/uploads/${req.file.filename}`
+        }
+
+        if (!title) { return res.status(400).json({ success: false, message: "Article title is required" }) };
+        if (!summary) { return res.status(400).json({ success: false, message: "Article summary is required" }) };
+        if (!content) { return res.status(400).json({ success: false, message: "Article content is required" }) };
+        if (!destination) { return res.status(400).json({ success: false, message: "Article destination is required" }) };
+        if (!interests || (Array.isArray(interests) && interests.length === 0)) { return res.status(400).json({ success: false, message: "Article interest is required" }) };
+
+        // Require location with lat & lng
+        if (!location || typeof location !== 'object' || !location.lat || !location.lng) {
+            return res.status(400).json({ success: false, message: "Article location is required. Please select a point on the map." });
+        }
 
         const article = await Article.create({
             title,
@@ -145,7 +175,8 @@ export const createArticle = async (req, res) => {
             imageUrl,
             author: req.user._id,
             destination,
-            interests: interests
+            interests: interests,
+            location
         });
 
         // Add article reference to destination
@@ -165,8 +196,28 @@ export const createArticle = async (req, res) => {
 export const updateArticle = async (req, res) => {
     try {
         const { id } = req.params;
-        const data = req.body;
 
+        const data = req.body || {}
+
+        // Parse JSON fields if necessary
+        if (typeof data.interests === 'string') {
+            try { data.interests = JSON.parse(data.interests) } catch (e) { data.interests = data.interests.split(',').map(s => s.trim()).filter(Boolean) }
+        }
+        if (typeof data.location === 'string') {
+            try { data.location = JSON.parse(data.location) } catch (e) { data.location = data.location }
+        }
+
+        // If file uploaded, set imageUrl (absolute)
+        if (req.file) {
+            const host = req.get('host')
+            const protocol = req.protocol
+            data.imageUrl = `${protocol}://${host}/uploads/${req.file.filename}`
+        }
+
+        // If location is being updated ensure lat/lng present
+        if (!data.location || typeof data.location !== 'object' || !data.location.lat || !data.location.lng) {
+            return res.status(400).json({ success: false, message: 'Article location is required. Please select a point on the map.' })
+        }
         const updated = await Article.findByIdAndUpdate(id, data, { new: true });
 
         if (!updated) return res.status(404).json({ message: 'Article not found' });

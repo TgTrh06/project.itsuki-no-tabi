@@ -1,7 +1,8 @@
 import express from "express";
 
 import { verifyAdmin, verifyToken } from "../middleware/auth.middleware.js";
-import { 
+import upload from "../middleware/upload.middleware.js";
+import {
     createArticle,
     deleteArticle,
     getAllArticles,
@@ -20,8 +21,8 @@ router.get("/:citySlug/:articleSlug", getArticleByCityAndSlug);
 router.get("/:id", getArticleById);
 
 // Admin only
-router.post("/", verifyToken, verifyAdmin, createArticle);
-router.put("/:id/edit", verifyToken, verifyAdmin, updateArticle);
+router.post("/", verifyToken, verifyAdmin, upload.single('image'), createArticle);
+router.put("/:id/edit", verifyToken, verifyAdmin, upload.single('image'), updateArticle);
 router.delete("/:id", verifyToken, verifyAdmin, deleteArticle);
 
 // Interact

@@ -5,6 +5,10 @@ import ArticleCreatePage from "../pages/articles/ArticleCreatePage";
 import AdminUserPage from "../pages/admin/AdminUserPage";
 import AdminDestinationPage from "../pages/admin/AdminDestinationPage";
 import ArticleEditPage from "../pages/articles/ArticleEditPage";
+import AdminPlansPage from "../pages/admin/AdminPlansPage";
+import AdminInterestsPage from "../pages/admin/AdminInterestsPage";
+import AdminPlanDetailPage from "../pages/admin/AdminPlanDetailPage";
+import AdminInterestCRUDPage from "../pages/admin/AdminInterestCRUDPage";
 
 const AdminRoutes = () => {
     return (
@@ -18,6 +22,10 @@ const AdminRoutes = () => {
             <Route path="/users" element={<AdminUserPage />} />
 
             <Route path="/destinations" element={<AdminDestinationPage />} />
+            <Route path="/plans" element={<AdminPlansPage />} />
+            <Route path="/interests" element={<AdminInterestsPage />} />
+            <Route path="/interests/manage" element={<AdminInterestCRUDPage />} />
+            <Route path="/plans/:userId" element={<AdminPlanDetailPage />} />
         </Routes>
     );
 };
