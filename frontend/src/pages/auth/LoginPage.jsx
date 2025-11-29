@@ -32,7 +32,7 @@ export default function LoginPage() {
       animate="visible"
       exit="exit"
       variants={pageVariants}
-      className="min-h-screen pt-5 bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center px-4"
+      className="min-h-screen pt-5 bg-gradient-to-br from-secondary via-background to-accent/20 flex items-center justify-center px-4"
     >
       <div className="w-full max-w-md">
         {/* Header */}
@@ -42,8 +42,8 @@ export default function LoginPage() {
           transition={{ delay: 0.1 }}
           className="text-center mb-8"
         >
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to continue to Itsuki no Tabi</p>
+          <h1 className="text-4xl font-bold text-foreground mb-2 font-serif">Welcome Back</h1>
+          <p className="text-muted-foreground">Sign in to continue to Itsuki no Tabi</p>
         </motion.div>
 
         {/* Card */}
@@ -51,16 +51,16 @@ export default function LoginPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-8 border border-gray-100"
+          className="bg-card rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-8 border border-border"
         >
           <form onSubmit={handleLogin} className="space-y-6">
             {/* Email Input */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-foreground mb-2">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-3.5 w-5 h-5 text-muted-foreground" />
                 <input
                   type="email"
                   value={email}
@@ -69,7 +69,7 @@ export default function LoginPage() {
                     useAuthStore.setState({ error: null })
                   }}
                   placeholder="itsuki@example.com"
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500 transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground placeholder-muted-foreground transition-all"
                   required
                 />
               </div>
@@ -77,11 +77,11 @@ export default function LoginPage() {
 
             {/* Password Input */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-foreground mb-2">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-3.5 w-5 h-5 text-muted-foreground" />
                 <input
                   type="password"
                   value={password}
@@ -90,7 +90,7 @@ export default function LoginPage() {
                     useAuthStore.setState({ error: null })
                   }}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500 transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground placeholder-muted-foreground transition-all"
                   required
                 />
               </div>
@@ -101,9 +101,9 @@ export default function LoginPage() {
               <motion.div
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-3 bg-red-50 border border-red-200 rounded-lg"
+                className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg"
               >
-                <p className="text-sm text-red-700 font-semibold">{error}</p>
+                <p className="text-sm text-destructive font-semibold">{error}</p>
               </motion.div>
             )}
 
@@ -111,7 +111,7 @@ export default function LoginPage() {
             <div className="flex justify-end">
               <Link
                 to="/auth/forgot-password"
-                className="text-sm text-blue-600 hover:text-blue-700 font-semibold transition-colors"
+                className="text-sm text-primary hover:opacity-80 font-semibold transition-opacity"
               >
                 Forgot password?
               </Link>
@@ -121,7 +121,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-primary hover:opacity-90 text-primary-foreground font-semibold py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -142,11 +142,11 @@ export default function LoginPage() {
           transition={{ delay: 0.3 }}
           className="text-center mt-6"
         >
-          <p className="text-gray-700">
+          <p className="text-foreground">
             Don't have an account?{" "}
             <Link
               to="/auth/register"
-              className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
+              className="text-primary hover:opacity-80 font-semibold transition-opacity"
             >
               Sign up
             </Link>

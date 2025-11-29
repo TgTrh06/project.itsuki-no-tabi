@@ -48,7 +48,7 @@ function NavDropdown({ label, categorizedItems, isOpen, onToggle }) {
     <div className="relative">
       <button
         onClick={onToggle}
-        className="flex items-center gap-1 px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors"
+        className="flex items-center gap-1 px-3 py-2 text-foreground hover:text-primary transition-colors"
       >
         {label}
         <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -61,11 +61,10 @@ function NavDropdown({ label, categorizedItems, isOpen, onToggle }) {
             animate="visible"
             exit="exit"
             variants={dropdownVariants}
-            // SỬA: Tăng chiều rộng và căn giữa để chứa nhiều cột
-            className="absolute left-0 mt-3 w-[800px] bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4 origin-top"
+            className="absolute left-0 mt-3 w-[800px] bg-card border border-border rounded-lg shadow-lg z-50 p-4 origin-top"
             style={{ transform: 'translateX(-50%)', left: '0%' }}
           >
-            <Link to="/destinations" className="flex items-gap-2 text-blue-600 mb-4 font-medium">
+            <Link to="/destinations" className="flex items-gap-2 text-primary mb-4 font-medium hover:underline">
               <span role="img" aria-label="map-pin">📍</span>
               Japan Map
             </Link>
@@ -75,13 +74,13 @@ function NavDropdown({ label, categorizedItems, isOpen, onToggle }) {
 
               {/* Cột 1: Top Destinations */}
               <div className="col-span-1">
-                <h3 className="font-bold text-gray-900 mb-2">Top Destinations</h3>
+                <h3 className="font-bold text-foreground mb-2">Top Destinations</h3>
                 <div className="space-y-1 text-sm">
                   {topDestinations.map((item) => (
                     <Link
                       key={item.title}
                       to={item.link}
-                      className="block text-gray-700 hover:text-blue-600"
+                      className="block text-muted-foreground hover:text-primary transition-colors"
                       onClick={onToggle}
                     >
                       {item.title}
@@ -95,7 +94,7 @@ function NavDropdown({ label, categorizedItems, isOpen, onToggle }) {
                 <div key={index} className="col-span-1">
                   {/* Tiêu đề "Prefectures" chỉ hiện ở cột đầu tiên, các cột sau dùng div rỗng để giữ khoảng cách */}
                   {index === 0 ? (
-                    <h3 className="font-bold text-gray-900 mb-2">Prefectures</h3>
+                    <h3 className="font-bold text-foreground mb-2">Prefectures</h3>
                   ) : (
                     <div className="h-6 mb-2"></div>
                   )}
@@ -105,7 +104,7 @@ function NavDropdown({ label, categorizedItems, isOpen, onToggle }) {
                       <Link
                         key={item.title}
                         to={item.link}
-                        className="block text-gray-700 hover:text-blue-600"
+                        className="block text-muted-foreground hover:text-primary transition-colors"
                         onClick={onToggle}
                       >
                         {item.title}
@@ -162,12 +161,12 @@ export default function Navbar() {
 
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-40 bg-white shadow-md border-b border-gray-200">
+    <nav className="fixed top-0 left-0 right-0 z-40 bg-card shadow-md border-b border-border">
       <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
         {/* Left: Logo + Navigation */}
         <div className="flex items-center gap-6">
-          <Link to="/" className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors">
-            Itsuki no Tabi
+          <Link to="/" className="text-2xl font-bold text-primary hover:opacity-90 transition-opacity font-serif">
+            ItsuTabi
           </Link>
 
           {/* Navigation Tabs */}
@@ -180,12 +179,12 @@ export default function Navbar() {
             />
           )}
 
-          <Link to="/articles" className="px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors">
+          <Link to="/articles" className="px-3 py-2 text-foreground hover:text-primary transition-colors">
             Articles
           </Link>
 
-          <Link to="/booking" className="px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors">
-            Booking
+          <Link to="/planning" className="px-3 py-2 text-foreground hover:text-primary transition-colors">
+            Planning
           </Link>
         </div>
 
@@ -194,9 +193,9 @@ export default function Navbar() {
           <button
             onClick={() => { setIsUserDropdownOpen(!isUserDropdownOpen); setOpenDropdown(null); }}
             className={`flex items-center justify-between w-full px-3 py-2 transition-colors rounded-lg 
-              ${isUserDropdownOpen
-                ? 'bg-blue-50 text-blue-600 border border-blue-500'
-                : 'text-gray-700 border border-gray-300 hover:border-blue-500 hover:text-blue-600'
+              ${isUserDropdownOpen
+                ? 'bg-accent text-accent-foreground border border-primary'
+                : 'text-foreground border border-border hover:border-primary hover:text-primary'
               }`}
           >
             <div className="flex items-center gap-2">
@@ -213,7 +212,7 @@ export default function Navbar() {
                 animate="visible"
                 exit="exit"
                 variants={dropdownVariants}
-                className="absolute right-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+                className="absolute right-0 mt-2 w-full bg-card border border-border rounded-lg shadow-lg z-50"
               >
                 <div className="py-1">
                   {isAuthenticated ? (
@@ -221,7 +220,7 @@ export default function Navbar() {
                       {user?.role === 'admin' ? (
                         <Link
                           to="/admin/profile"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                          className="block px-4 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                           onClick={() => setIsUserDropdownOpen(false)}
                         >
                           Admin Dashboard
@@ -229,7 +228,7 @@ export default function Navbar() {
                       ) : (
                         <Link
                           to="/user/profile"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                          className="block px-4 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                           onClick={() => setIsUserDropdownOpen(false)}
                         >
                           My Profile
@@ -237,7 +236,7 @@ export default function Navbar() {
                       )}
                       <button
                         onClick={handleLogout}
-                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        className="flex items-center w-full px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
                       >
                         <LogOut className="w-4 h-4 mr-2" />
                         Logout
@@ -247,14 +246,14 @@ export default function Navbar() {
                     <>
                       <Link
                         to="/auth/login"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                        className="block px-4 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                         onClick={() => setIsUserDropdownOpen(false)}
                       >
                         Login
                       </Link>
                       <Link
                         to="/auth/register"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                        className="block px-4 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                         onClick={() => setIsUserDropdownOpen(false)}
                       >
                         Sign Up

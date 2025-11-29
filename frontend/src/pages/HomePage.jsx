@@ -14,7 +14,7 @@ export default function HomePage() {
       animate="visible"
       exit="exit"
       variants={pageVariants}
-      className="min-h-screen pt-20 bg-gradient-to-br from-blue-50 via-white to-indigo-50 px-6"
+      className="min-h-screen pt-20 bg-gradient-to-br from-secondary via-background to-accent/20 px-6"
     >
       <div className="max-w-5xl mx-auto text-center">
         {/* Hero Section */}
@@ -24,9 +24,9 @@ export default function HomePage() {
           transition={{ delay: 0.1 }}
           className="mb-10"
         >
-          <h1 className="text-5xl font-bold text-blue-700 mb-4">Explore Japan</h1>
-          <p className="text-gray-700 text-lg">
-            Discover the beauty of Japan with <span className="font-semibold text-blue-600">Itsuki no Tabi</span>. From bustling cities to serene countryside, embark on a journey like no other.
+          <h1 className="text-5xl font-bold text-primary mb-4 font-serif">Explore Japan</h1>
+          <p className="text-foreground text-lg">
+            Discover the beauty of Japan with <span className="font-semibold text-primary">ItsuTabi</span>. From bustling cities to serene countryside, embark on a journey like no other.
           </p>
         </motion.div>
 
@@ -39,13 +39,13 @@ export default function HomePage() {
         >
           <Link
             to="/destinations"
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
+            className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition shadow-md"
           >
             View Destinations
           </Link>
           <Link
             to="/articles"
-            className="px-6 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition"
+            className="px-6 py-3 bg-secondary text-secondary-foreground border-2 border-primary rounded-lg font-semibold hover:bg-accent transition shadow-md"
           >
             Read Travel Articles
           </Link>
@@ -61,7 +61,7 @@ export default function HomePage() {
           {[
             {
               title: "🌸 Culture & Traditions",
-              desc: "Experience Japan’s rich heritage through temples, festivals, and timeless customs."
+              desc: "Experience Japan's rich heritage through temples, festivals, and timeless customs."
             },
             {
               title: "🏞️ Nature & Scenery",
@@ -74,10 +74,10 @@ export default function HomePage() {
           ].map((item, idx) => (
             <div
               key={idx}
-              className="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition"
+              className="bg-card rounded-xl shadow-md p-6 border border-border hover:shadow-lg transition"
             >
-              <h3 className="text-lg font-bold text-blue-700 mb-2">{item.title}</h3>
-              <p className="text-sm text-gray-600">{item.desc}</p>
+              <h3 className="text-lg font-bold text-primary mb-2">{item.title}</h3>
+              <p className="text-sm text-muted-foreground">{item.desc}</p>
             </div>
           ))}
         </motion.div>

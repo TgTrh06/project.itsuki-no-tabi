@@ -2,14 +2,13 @@ import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import HomePage from './pages/HomePage'
 import AuthRoutes from './routes/AuthRoutes'
-import DestinationPage from './pages/destination/DestinationPage'
-import DestinationDetailPage from './pages/destination/DestinationDetailPage'
 import InterestsListPage from './pages/interest/InterestsListPage'
-import BookingPage from './pages/BookingPage'
+import PlanningPage from './pages/PlanningPage'
 import UserProfile from './pages/user/UserProfile'
 import AdminRoutes from './routes/AdminRoutes'
 import DestinationRoutes from './routes/DestinationRoutes'
 import ArticleRoutes from './routes/ArticleRoutes'
+import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
 	return (
@@ -18,14 +17,25 @@ function App() {
 			<Routes>
 				<Route path="/" element={<HomePage />} />
 
-				<Route path="/auth/*" element={<AuthRoutes />} />
-				<Route path="/user/profile" element={<UserProfile />} />
-				<Route path="/admin/*" element={<AdminRoutes />} />
-
 				<Route path="/destinations/*" element={<DestinationRoutes />} />
 				<Route path="/articles/*" element={<ArticleRoutes />} />
-				<Route path="/booking" element={<BookingPage />} />
-				
+
+				<Route path="/auth/*" element={<AuthRoutes />} />
+
+				<Route path="/user/profile" element={<UserProfile />} />
+
+				<Route path="/admin/*" element={
+					<ProtectedRoute>
+						<AdminRoutes />
+					</ProtectedRoute>}
+				/>
+
+				<Route path="/planning" element={
+					<ProtectedRoute>
+						<PlanningPage />
+					</ProtectedRoute>
+				} />
+
 				<Route path="/interests/:slug" element={<InterestsListPage />} />
 			</Routes>
 		</div>

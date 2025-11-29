@@ -1,6 +1,9 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
+import { Link } from "react-router-dom"
 import useArticleStore from "../../store/articleStore"
+import useInterestStore from "../../store/interestStore"
+import useDestinationStore from "../../store/destinationStore"
 import ArticleCard from "../../components/ArticleCard"
 
 const pageVariants = {
@@ -10,15 +13,58 @@ const pageVariants = {
 }
 
 export default function ArticleListPage() {
-  const { articles, page, pages, loading, fetchArticles } = useArticleStore()
+  const { articles, page, pages, loading, fetchArticles, fetchTopArticles } = useArticleStore()
+  const { interests, fetchInterests } = useInterestStore()
+  const { destinations, fetchDestinations } = useDestinationStore()
+  
+  const [topArticles, setTopArticles] = useState([])
+  const [filters, setFilters] = useState({
+    interest: '',
+    destination: '',
+  })
 
   useEffect(() => {
     fetchArticles({ page: 1, limit: 10 }).catch(() => { })
+    fetchInterests().catch(() => { })
+    fetchDestinations({ page: 1, limit: 50 }).catch(() => { })
+    
+    // Fetch top 10 articles
+    fetchTopArticles(10).then(top => {
+      setTopArticles(top || [])
+    }).catch(() => { })
   }, [])
+  
+  // Debug log
+  useEffect(() => {
+    console.log('Interests:', interests)
+    console.log('Destinations:', destinations)
+  }, [interests, destinations])
+  
+  useEffect(() => {
+    fetchArticles({ 
+      page: 1, 
+      limit: 10, 
+      interest: filters.interest,
+      destination: filters.destination 
+    }).catch(() => { })
+  }, [filters])
 
-  const gotoPage = (p) => {
+    const gotoPage = (p) => {
     if (p < 1 || p > pages) return
-    fetchArticles({ page: p, limit: 10 }).catch(() => { })
+    fetchArticles({ 
+      page: p, 
+      limit: 10,
+      interest: filters.interest,
+      destination: filters.destination 
+    }).catch(() => { })
+  }
+  
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }))
+  }
+  
+  const clearFilters = () => {
+    setFilters({ interest: '', destination: '' })
   }
 
   return (
@@ -84,27 +130,106 @@ export default function ArticleListPage() {
             </motion.div>
           </div>
 
-          {/* Side Tab: 4/10 */}
-          <div className="md:w-3/10 w-full">
+                    {/* Side Tab: Filters + Top 10 */}
+          <div className="md:w-3/10 w-full space-y-6">
+            {/* Filters Section */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
               className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100"
             >
-              <h2 className="text-xl font-bold text-gray-800 mb-4">Highlights</h2>
-              <ul className="space-y-3 text-sm text-gray-600">
-                <li>🌟 Top-rated articles</li>
-                <li>📍 Popular destinations</li>
-                <li>🧭 Travel tips & tricks</li>
-                <li>🗓️ Seasonal guides</li>
-              </ul>
-
-              <div className="mt-6">
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">Want to contribute?</h3>
-                <p className="text-xs text-gray-500">
-                  If you're an admin, you can create new articles from the dashboard.
-                </p>
+              <h2 className="text-xl font-bold text-gray-800 mb-4">Filters</h2>
+              
+              {/* Interest Filter */}
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Interest
+                </label>
+                <select
+                  value={filters.interest}
+                  onChange={(e) => handleFilterChange('interest', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                >
+                  <option value="">All Interests</option>
+                  {interests && interests.length > 0 ? (
+                    interests.map((interest) => (
+                      <option key={interest._id} value={interest.slug}>
+                        {interest.title}
+                      </option>
+                    ))
+                  ) : (
+                    <option disabled>Loading...</option>
+                  )}
+                </select>
+              </div>
+              
+              {/* Destination Filter */}
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Destination
+                </label>
+                <select
+                  value={filters.destination}
+                  onChange={(e) => handleFilterChange('destination', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                >
+                  <option value="">All Destinations</option>
+                  {destinations && destinations.length > 0 ? (
+                    destinations.map((dest) => (
+                      <option key={dest._id} value={dest.slug}>
+                        {dest.title}
+                      </option>
+                    ))
+                  ) : (
+                    <option disabled>Loading...</option>
+                  )}
+                </select>
+              </div>
+              
+              {/* Clear Filters Button */}
+              {(filters.interest || filters.destination) && (
+                <button
+                  onClick={clearFilters}
+                  className="w-full px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-colors text-sm"
+                >
+                  Clear Filters
+                </button>
+              )}
+            </motion.div>
+            
+            {/* Top 10 Most Viewed Articles */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+              className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100"
+            >
+              <h2 className="text-xl font-bold text-gray-800 mb-4">🔥 Top 10 Most Viewed</h2>
+              <div className="space-y-3">
+                {topArticles.length === 0 ? (
+                  <p className="text-sm text-gray-500">No articles yet</p>
+                ) : (
+                  topArticles.map((article, index) => (
+                    <Link
+                      key={article._id}
+                      to={`/articles/${article.destination?.slug || ''}/${article.slug}`}
+                      className="flex gap-3 hover:bg-gray-50 p-2 rounded-lg transition-colors group"
+                    >
+                      <span className="text-lg font-bold text-gray-400 group-hover:text-blue-500 transition-colors min-w-[24px]">
+                        {index + 1}
+                      </span>
+                      <div className="flex-1">
+                        <h3 className="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-2">
+                          {article.title}
+                        </h3>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {article.meta?.views || 0} views
+                        </p>
+                      </div>
+                    </Link>
+                  ))
+                )}
               </div>
             </motion.div>
           </div>
