@@ -21,11 +21,16 @@ const articleSchema = new mongoose.Schema(
         imageUrl: {
             type: String
         },
+        location: {
+            lat: { type: Number },
+            lng: { type: Number },
+            address: { type: String }
+        },
         meta: {
             views: { type: Number, default: 0 },
             // Stores user list that liked the article
             likes: [
-                { 
+                {
                     type: mongoose.Schema.Types.ObjectId,
                     ref: "User"
                 }

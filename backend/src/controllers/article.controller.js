@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Article } from "../models/article.model.js";
 import { Comment } from "../models/comment.model.js";
 import { Destination } from "../models/destination.model.js";
@@ -7,12 +8,37 @@ import slugify from "../utils/slugify.js";
 export const getAllArticles = async (req, res) => {
     try {
         const filter = {};
-        if (req.query.destination) filter.destination = req.query.destination;
+        
+        // Handle destination filter (can be ID or slug)
+        if (req.query.destination) {
+            let destination;
+            // Try to find by ID first if it looks like a valid ObjectId
+            if (mongoose.Types.ObjectId.isValid(req.query.destination)) {
+                destination = await Destination.findById(req.query.destination);
+            }
+            // Otherwise find by slug
+            if (!destination) {
+                destination = await Destination.findOne({ slug: req.query.destination });
+            }
+            if (destination) {
+                filter.destination = destination._id;
+            }
+        }
+        
         if (req.query.author) filter.author = req.query.author;
+        
+        // Handle interest filter (can be ID or slug)
         if (req.query.interest) {
-            // Support both interest slug and ID
             const { Interest } = await import("../models/interest.model.js");
-            const interest = await Interest.findOne({ $or: [{ slug: req.query.interest }, { _id: req.query.interest }] });
+            let interest;
+            // Try to find by ID first if it looks like a valid ObjectId
+            if (mongoose.Types.ObjectId.isValid(req.query.interest)) {
+                interest = await Interest.findById(req.query.interest);
+            }
+            // Otherwise find by slug
+            if (!interest) {
+                interest = await Interest.findOne({ slug: req.query.interest });
+            }
             if (interest) {
                 filter.interests = interest._id;
             }
@@ -22,11 +48,16 @@ export const getAllArticles = async (req, res) => {
         const limit = Math.max(parseInt(req.query.limit) || 10, 1);
         const skip = (page - 1) * limit;
 
+        let sort = { createdAt: -1 };
+        if (req.query.sort === 'views') {
+            sort = { 'meta.views': -1 };
+        }
+
         const total = await Article.countDocuments(filter);
         const articles = await Article.find(filter)
             .populate("author", "name email")
             .populate("destination", "title slug")
-            .sort({ createdAt: -1 })
+            .sort(sort)
             .skip(skip)
             .limit(limit);
 

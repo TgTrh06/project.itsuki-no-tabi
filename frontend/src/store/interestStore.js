@@ -10,14 +10,16 @@ const useInterestStore = create((set, get) => ({
   loading: false,
   error: null,
 
-  fetchInterests: async () => {
+    fetchInterests: async () => {
     set({ loading: true, error: null })
     try {
       const res = await api.get('/interests')
+      console.log('Interest API response:', res.data)
       set({ interests: res.data, loading: false })
       return res.data
     } catch (err) {
-      set({ error: err, loading: false })
+      console.error('Error fetching interests:', err)
+      set({ error: err, loading: false, interests: [] })
       throw err
     }
   },

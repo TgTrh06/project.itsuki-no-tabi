@@ -37,6 +37,11 @@ const seedArticles = async () => {
         summary: `Tóm tắt cho bài viết số ${i + 1}`,
         content: `Nội dung chi tiết của bài viết số ${i + 1}`,
         imageUrl: `https://source.unsplash.com/random/800x600?sig=${i}`,
+        location: {
+          lat: 35.6895 + (Math.random() - 0.5) * 0.1,
+          lng: 139.6917 + (Math.random() - 0.5) * 0.1,
+          address: `Tokyo Location ${i + 1}`
+        },
         meta: {
           views: Math.floor(Math.random() * 1000),
           likes: [],

@@ -11,12 +11,14 @@ const useArticleStore = create((set, get) => ({
   error: null,
 
   // Lấy danh sách bài viết
-  fetchArticles: async ({ page = 1, limit = 10, destination, author } = {}) => {
+  fetchArticles: async ({ page = 1, limit = 10, destination, author, interest, sort } = {}) => {
     set({ loading: true, error: null })
     try {
       const q = []
       if (destination) q.push(`destination=${destination}`)
       if (author) q.push(`author=${author}`)
+      if (interest) q.push(`interest=${interest}`)
+      if (sort) q.push(`sort=${sort}`)
       q.push(`page=${page}`)
       q.push(`limit=${limit}`)
       const query = q.length ? `?${q.join('&')}` : ''
@@ -27,6 +29,17 @@ const useArticleStore = create((set, get) => ({
     } catch (err) {
       set({ error: err, loading: false })
       throw err
+    }
+  },
+
+  // Lấy top bài viết (views)
+  fetchTopArticles: async (limit = 10) => {
+    try {
+      const res = await api.get(`/articles?sort=views&limit=${limit}`)
+      return res.data.data
+    } catch (err) {
+      console.error("Failed to fetch top articles", err)
+      return []
     }
   },
 
