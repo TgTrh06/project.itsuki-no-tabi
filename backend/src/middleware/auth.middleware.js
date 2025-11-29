@@ -6,25 +6,31 @@ export const verifyToken = async (req, res, next) => {
 	try {
 		const token = req.cookies?.token || req.header("Authorization")?.replace("Bearer ", "");
 		if (!token) {
-			return res.status(401).json({ success: false, message: "Unauthorized - No token provided" });
+			return res.status(401).json({ success: false, message: "Session expired or not found. Please log in again." });
 		}
 
 		const decoded = jwt.verify(token, process.env.JWT_SECRET);
 		if (!decoded) {
-			return res.status(401).json({ success: false, message: "Unauthorized - Invalid token" });
+			return res.status(401).json({ success: false, message: "Invalid token. Please log in again." });
 		}
 		
 		const user = await User.findById(decoded.userId).select("-password");
 
 		if (!user) {
-			return res.status(401).json({ success: false, message: "Unauthorized - User not found" });
+			return res.status(401).json({ success: false, message: "User not found. Please log in again." });
 		}
 
 		req.user = user;
 		next();
 	} catch (error) {
-		console.error("Error in verifyToken:", error);
-		return res.status(500).json({ success: false, message: "Server error" });
+		if (error.name === 'TokenExpiredError') {
+			return res.status(401).json({ success: false, message: "Token expired. Please log in again." });
+		}
+		if (error.name === 'JsonWebTokenError') {
+			return res.status(401).json({ success: false, message: "Invalid token. Please log in again." });
+		}
+		console.error("Error in verifyToken:", error.message);
+		return res.status(500).json({ success: false, message: "Authentication error. Please try again." });
 	}
 };
 

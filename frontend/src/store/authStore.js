@@ -1,4 +1,5 @@
 import { create } from 'zustand'; // Custom hooks manager (Global State)
+import { toast } from 'react-toastify'
 import api from '../utils/api'
 
 // Create custom hook Zustand
@@ -14,14 +15,17 @@ const useAuthStore = create((set) => ({
         set({ isLoading: true, error: null });
         try {
             const response = await api.post(`/auth/register`, { name, email, password });
-            set({ 
+            set({
                 user: response.data.user,
-                isAuthenticated: true, 
-                isLoading: false 
+                isAuthenticated: true,
+                isLoading: false
             });
+            toast.success('Account created successfully! Welcome!');
             return response.data;
         } catch (error) {
-            set({ error: error.response?.data?.message || "Error signing up", isLoading: false });
+            const errorMsg = error.response?.data?.message || "Error signing up";
+            set({ error: errorMsg, isLoading: false });
+            toast.error(errorMsg);
             throw error;
         }
     },
@@ -29,18 +33,21 @@ const useAuthStore = create((set) => ({
         set({ isLoading: true, error: null });
         try {
             const response = await api.post(`/auth/login`, { email, password });
-            set({ 
+            set({
                 user: response.data.user,
                 isAuthenticated: true,
                 error: null,
                 isLoading: false,
             });
+            toast.success('Logged in successfully!');
             return response.data;
         } catch (error) {
+            const errorMsg = error.response?.data?.message || "Error logging in";
             set({
-                error: error.response?.data?.message || "Error logging in", 
+                error: errorMsg,
                 isLoading: false,
             });
+            toast.error(errorMsg);
             throw error;
         }
     },
@@ -54,11 +61,13 @@ const useAuthStore = create((set) => ({
                 error: null,
                 isLoading: false,
             });
+            toast.info('Logged out successfully');
         } catch (error) {
             set({
                 error: "Error logging out",
                 isLoading: false,
             });
+            toast.error("Error logging out");
             throw error;
         }
     },
@@ -111,6 +120,10 @@ const useAuthStore = create((set) => ({
             });
             throw error;
         }
+    },
+    // Set user directly (for profile updates)
+    setUser: (user) => {
+        set({ user, isAuthenticated: true });
     },
 }))
 

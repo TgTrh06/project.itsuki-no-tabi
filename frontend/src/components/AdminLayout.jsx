@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ChevronRight, ChevronDown, FileText, Users, MapPin } from 'lucide-react'
+import { ChevronRight, ChevronDown, FileText, Users, MapPin, Zap } from 'lucide-react'
 
 export default function AdminLayout({ children }) {
   const [openSection, setOpenSection] = useState('articles')
@@ -29,6 +29,23 @@ export default function AdminLayout({ children }) {
       icon: MapPin,
       items: [
         { title: 'All Destinations', to: '/admin/destinations' },
+      ]
+    },
+    {
+      key: 'plans',
+      title: 'Plans',
+      icon: Users,
+      items: [
+        { title: 'View User Plans', to: '/admin/plans' }
+      ]
+    },
+    {
+      key: 'interests',
+      title: 'Interests',
+      icon: Zap,
+      items: [
+        { title: 'View All', to: '/admin/interests' },
+        { title: 'Create / Edit', to: '/admin/interests/manage' }
       ]
     }
   ]
