@@ -13,11 +13,47 @@ const pageVariants = {
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [errors, setErrors] = useState({})
   const navigate = useNavigate()
   const { login, isLoading, error } = useAuthStore()
 
+  const validateField = (field, value) => {
+    const newErrors = { ...errors }
+    
+    if (field === 'email') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!value) {
+        newErrors.email = 'Email is required'
+      } else if (!emailRegex.test(value)) {
+        newErrors.email = 'Please enter a valid email'
+      } else {
+        delete newErrors.email
+      }
+    }
+    
+    if (field === 'password') {
+      if (!value) {
+        newErrors.password = 'Password is required'
+      } else if (value.length < 1) {
+        newErrors.password = 'Password is required'
+      } else {
+        delete newErrors.password
+      }
+    }
+    
+    setErrors(newErrors)
+  }
+
   const handleLogin = async (e) => {
     e.preventDefault()
+    
+    validateField('email', email)
+    validateField('password', password)
+    
+    if (Object.keys(errors).length > 0) {
+      return
+    }
+    
     try {
       await login(email, password)
       navigate("/")
@@ -66,13 +102,17 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value)
+                    validateField('email', e.target.value)
                     useAuthStore.setState({ error: null })
                   }}
                   placeholder="itsuki@example.com"
-                  className="w-full pl-10 pr-4 py-2.5 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground placeholder-muted-foreground transition-all"
+                  className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-ring bg-background text-foreground placeholder-muted-foreground transition-all ${
+                    errors.email ? 'border-destructive focus:ring-destructive' : 'border-input focus:ring-ring'
+                  }`}
                   required
                 />
               </div>
+              {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
             </div>
 
             {/* Password Input */}
@@ -87,13 +127,17 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value)
+                    validateField('password', e.target.value)
                     useAuthStore.setState({ error: null })
                   }}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-2.5 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground placeholder-muted-foreground transition-all"
+                  className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-ring bg-background text-foreground placeholder-muted-foreground transition-all ${
+                    errors.password ? 'border-destructive focus:ring-destructive' : 'border-input focus:ring-ring'
+                  }`}
                   required
                 />
               </div>
+              {errors.password && <p className="text-xs text-destructive mt-1">{errors.password}</p>}
             </div>
 
             {/* Error Message */}
@@ -120,7 +164,7 @@ export default function LoginPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || Object.keys(errors).length > 0}
               className="w-full bg-primary hover:opacity-90 text-primary-foreground font-semibold py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
