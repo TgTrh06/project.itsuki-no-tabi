@@ -8,10 +8,21 @@ export const getAllDestinations = async (req, res) => {
         const skip = (page - 1) * limit;
 
         const total = await Destination.countDocuments();
-        const destinations = await Destination.find().sort({ title: 1 }).skip(skip).limit(limit);
+        const destinations = await Destination.find()
+            .populate('articles', '_id')
+            .sort({ title: 1 })
+            .skip(skip)
+            .limit(limit);
+        
+        // Add article count to each destination
+        const destinationsWithCount = destinations.map(dest => ({
+            ...dest.toObject(),
+            articleCount: dest.articles?.length || 0
+        }));
+        
         const pages = Math.ceil(total / limit) || 1;
 
-        res.json({ data: destinations, total, page, pages });
+        res.json({ data: destinationsWithCount, total, page, pages });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

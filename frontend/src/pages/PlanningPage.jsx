@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import usePlanStore from '../store/planStore'
+import useAuthStore from '../store/authStore'
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import icon from 'leaflet/dist/images/marker-icon.png'
@@ -29,7 +30,8 @@ function MapUpdater({ items }) {
 }
 
 export default function PlanningPage() {
-  const { plannedItems, removeItem, clearPlan, addItem } = usePlanStore()
+  const { plannedItems, removeItem, clearPlan, addItem, loadForUser, currentUserId } = usePlanStore()
+  const { user } = useAuthStore()
   const [optimizedItems, setOptimizedItems] = useState([])
   const [routeInfo, setRouteInfo] = useState(null)
 
@@ -40,6 +42,10 @@ export default function PlanningPage() {
   useEffect(() => {
     setOptimizedItems(plannedItems)
   }, [plannedItems])
+
+  useEffect(() => {
+    // nothing special now — per-user plans are separate and we do not merge guest plans
+  }, [user, plannedItems])
 
   // Haversine formula to calculate distance in km
   const getDistance = (lat1, lon1, lat2, lon2) => {
@@ -124,58 +130,33 @@ export default function PlanningPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-4 mt-20">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800 flex items-center gap-2">
-        <Navigation className="w-8 h-8 text-blue-600" />
+      <h1 className="text-3xl font-bold mb-6 text-foreground flex items-center gap-2 font-serif">
+        <Navigation className="w-8 h-8 text-primary" />
         Trip Planning
       </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: List & Controls */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="lg:col-span-1 space-y-6">      
 
-          {/* Settings Panel */}
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-            <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-              <Settings className="w-4 h-4" /> Route Settings
-            </h3>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Travel Mode</label>
-                <select
-                  value={travelMode}
-                  onChange={(e) => setTravelMode(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="car">Car</option>
-                  <option value="moto">Motorcycle</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="avoidTolls"
-                  checked={avoidTolls}
-                  onChange={(e) => setAvoidTolls(e.target.checked)}
-                  className="rounded text-blue-600 focus:ring-blue-500"
-                />
-                <label htmlFor="avoidTolls" className="text-sm text-gray-700">Avoid Tollways</label>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+          <div className="bg-card p-6 rounded-xl shadow-md border border-border">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-700">Itinerary</h2>
-              <button
-                onClick={clearPlan}
-                className="text-red-500 hover:text-red-700 text-sm font-medium"
-              >
-                Clear All
-              </button>
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">Itinerary</h2>
+                <div className="text-xs text-muted-foreground">Active plan: <span className="font-medium">{currentUserId && currentUserId !== 'guest' ? (user?.name || user?.email || currentUserId) : 'Guest'}</span></div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={clearPlan}
+                  className="text-destructive hover:opacity-80 text-sm font-medium"
+                >
+                  Clear All
+                </button>
+              </div>
             </div>
 
             {optimizedItems.length === 0 ? (
-              <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+              <div className="text-center py-8 text-muted-foreground bg-muted rounded-lg border-2 border-dashed border-border">
                 <MapPin className="w-10 h-10 mx-auto mb-2 opacity-50" />
                 <p>No locations added yet.</p>
                 <p className="text-sm mt-1">Go to articles to add destinations.</p>
@@ -183,17 +164,17 @@ export default function PlanningPage() {
             ) : (
               <div className="space-y-3">
                 {optimizedItems.map((item, index) => (
-                  <div key={item._id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors group">
-                    <div className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold mt-0.5">
+                  <div key={item._id} className="flex items-start gap-3 p-3 bg-muted rounded-lg border border-border hover:border-primary transition-colors group">
+                    <div className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold mt-0.5">
                       {index + 1}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 truncate">{item.title}</h3>
-                      <p className="text-xs text-gray-500 truncate">{item.location?.address || "No address"}</p>
+                      <h3 className="font-medium text-foreground truncate">{item.title}</h3>
+                      <p className="text-xs text-muted-foreground truncate">{item.location?.address || "No address"}</p>
                     </div>
                     <button
                       onClick={() => removeItem(item._id)}
-                      className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -205,7 +186,7 @@ export default function PlanningPage() {
             {optimizedItems.length > 1 && (
               <button
                 onClick={handleOptimize}
-                className="w-full mt-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-200"
+                className="w-full mt-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-md"
               >
                 <Navigation className="w-4 h-4" />
                 Optimize Route
@@ -213,7 +194,7 @@ export default function PlanningPage() {
             )}
 
             {routeInfo && (
-              <div className="mt-4 p-4 bg-green-50 text-green-800 rounded-lg border border-green-200">
+              <div className="mt-4 p-4 bg-accent/20 text-accent-foreground rounded-lg border border-accent">
                 <h4 className="font-bold mb-1">Route Summary</h4>
                 <div className="flex justify-between text-sm">
                   <span>Total Distance:</span>
@@ -223,11 +204,11 @@ export default function PlanningPage() {
                   <span>Est. Travel Time:</span>
                   <span className="font-mono font-bold">{routeInfo.time}</span>
                 </div>
-                <div className="flex justify-between text-sm mt-1 text-gray-600">
+                <div className="flex justify-between text-sm mt-1 text-muted-foreground">
                   <span>Mode:</span>
                   <span className="capitalize">{routeInfo.mode} {routeInfo.avoidTolls ? '(No Tolls)' : ''}</span>
                 </div>
-                <p className="text-xs text-green-600 mt-2 italic">*Straight line distance approximation</p>
+                <p className="text-xs text-muted-foreground mt-2 italic">*Straight line distance approximation</p>
               </div>
             )}
           </div>
@@ -235,7 +216,7 @@ export default function PlanningPage() {
 
         {/* Right Column: Map */}
         <div className="lg:col-span-2">
-          <div className="h-[600px] rounded-xl overflow-hidden shadow-lg border border-gray-200 relative z-0">
+          <div className="h-[600px] rounded-xl overflow-hidden shadow-lg border border-border relative z-0">
             <MapContainer
               center={[35.6762, 139.6503]} // Default to Tokyo
               zoom={11}

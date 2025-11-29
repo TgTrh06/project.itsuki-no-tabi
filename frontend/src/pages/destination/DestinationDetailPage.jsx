@@ -39,8 +39,8 @@ export default function DestinationDetailPage() {
     fetchArticles({ destination: destination._id, page: p, limit: 4 }).catch(() => { })
   }
 
-  if (destLoading) return <div className="p-4">Loading...</div>
-  if (!destination) return <div className="p-4">Destination not found</div>
+  if (destLoading) return <div className="p-4 text-muted-foreground">Loading...</div>
+  if (!destination) return <div className="p-4 text-muted-foreground">Destination not found</div>
 
   return (
     <motion.div
@@ -48,18 +48,18 @@ export default function DestinationDetailPage() {
       animate="visible"
       exit="exit"
       variants={pageVariants}
-      className="min-h-screen pt-10 bg-gradient-to-br from-blue-50 via-white to-indigo-50 px-4"
+      className="min-h-screen mt-20 bg-gradient-to-br from-secondary via-background to-accent/20 px-4"
     >
-      <div className="max-w-6xl mx-auto flex flex-col gap-6">
+      <div className="max-w-6xl mx-auto flex flex-col gap-6 py-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-center mb-4"
+          className="bg-primary text-primary-foreground rounded-2xl p-8 text-center mb-4"
         >
-          <h1 className="text-4xl font-bold text-gray-900 mt-5">{destination.title}</h1>
-          <p className="text-gray-600">{destination.description}</p>
+          <h1 className="text-4xl font-bold font-serif">{destination.title}</h1>
+          <p className="text-primary-foreground/80">{destination.description}</p>
         </motion.div>
 
         <div className="flex flex-col md:flex-row gap-6">
@@ -69,13 +69,13 @@ export default function DestinationDetailPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6 border border-gray-100"
+              className="bg-card rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6 border border-border"
             >
-              <h2 className="text-2xl font-semibold mb-5 text-blue-700">Articles</h2>
+              <h2 className="text-2xl font-semibold mb-5 text-primary">Articles</h2>
               {artLoading ? (
-                <p className="text-center text-gray-500">Loading articles...</p>
+                <p className="text-center text-muted-foreground">Loading articles...</p>
               ) : storeArticles.length === 0 ? (
-                <p className="text-center text-gray-500">No articles for this destination.</p>
+                <p className="text-center text-muted-foreground">No articles for this destination.</p>
               ) : (
                 <>
                   <div className="flex flex-col gap-6 mb-6">
@@ -87,17 +87,17 @@ export default function DestinationDetailPage() {
                     <button
                       disabled={page <= 1}
                       onClick={() => gotoPage(page - 1)}
-                      className="px-4 py-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground font-semibold rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Prev
                     </button>
-                    <span className="text-gray-700 font-medium">
+                    <span className="text-foreground font-medium">
                       Page {page} / {pages}
                     </span>
                     <button
                       disabled={page >= pages}
                       onClick={() => gotoPage(page + 1)}
-                      className="px-4 py-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground font-semibold rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Next
                     </button>
@@ -111,17 +111,10 @@ export default function DestinationDetailPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100"
+              className="bg-card rounded-2xl shadow-lg p-6 border border-border"
             >
-              <h2 className="text-xl font-bold text-gray-800 mb-4">{ destination.title }</h2>
+              <h2 className="text-xl font-bold text-foreground mb-4">{destination.title}</h2>
               <JapanMap slug={slug} />
-
-              <div className="mt-6">
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">Want to contribute?</h3>
-                <p className="text-xs text-gray-500">
-                  If you're an admin, you can create new articles from the dashboard.
-                </p>
-              </div>
             </motion.div>
           </div>
         </div>

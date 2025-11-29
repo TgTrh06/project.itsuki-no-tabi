@@ -6,9 +6,11 @@ import useDestinationStore from '../../store/destinationStore'
 export default function DestinationPage() {
   const { destinations, loading, fetchDestinations } = useDestinationStore()
   const [searchTerm, setSearchTerm] = useState("")
+  // Hover state for map interaction
+  const [hoveredDestSlug, setHoveredDestSlug] = useState(null)
 
   useEffect(() => {
-    fetchDestinations({ page: 1, limit: 100 }).catch(() => {})
+    fetchDestinations({ page: 1, limit: 100 }).catch(() => { })
   }, [])
 
   const filteredDestinations = destinations.filter(dest =>
@@ -17,15 +19,21 @@ export default function DestinationPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-6 mt-20">
-      <h1 className="text-3xl font-bold mb-6">Destinations</h1>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Header */}
+      <div
+        className="bg-primary text-primary-foreground rounded-2xl py-6 text-center mb-4"
+      >
+        <h1 className="text-4xl font-bold font-serif">Destinations</h1>
+        <p className="text-primary-foreground/80">Explore Japan Prefacture</p>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 py-8 rounded-xl border border-4 border-border shadow-sm">
         {/* Map Section */}
         <div className="lg:col-span-2">
-          <JapanMap />
+          <JapanMap hoveredDestSlug={hoveredDestSlug} />
         </div>
 
         {/* Sidebar: Search + List */}
-        <div className="flex flex-col">
+        <div className="flex flex-col p-4">
           <h2 className="text-xl font-semibold mb-2">All Destinations</h2>
 
           {/* Search Bar */}
@@ -46,7 +54,14 @@ export default function DestinationPage() {
             ) : (
               <div className="space-y-2">
                 {filteredDestinations.map(dest => (
-                  <DestinationCard key={dest._id} dest={dest} />
+                  // Destination Card with hover handlers
+                  <div
+                    key={dest._id}
+                    onMouseEnter={() => setHoveredDestSlug(dest.slug)}
+                    onMouseLeave={() => setHoveredDestSlug(null)}
+                  >
+                    <DestinationCard dest={dest} />
+                  </div>
                 ))}
               </div>
             )}
