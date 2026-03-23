@@ -251,7 +251,7 @@ export default function AdminProfile() {
                   value={editEmail}
                   onChange={(e) => setEditEmail(e.target.value)}
                   className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
-                  required
+                  disabled
                 />
               </div>
 
